@@ -73,6 +73,11 @@
     <div class="panel p-4 mb-3">
       <h2 class="h6 text-uppercase text-muted fw-bold mb-1">Advance Order Status</h2>
       <p class="small text-muted mb-3">Every change is logged in the status history table. Cancelling automatically restores stock.</p>
+      {% if order.payment.method == "GCASH" and not order.payment.is_verified and order.status != "CANCELLED" %}
+        <div class="p-2 px-3 rounded border bg-light small mb-3">
+          <i class="bi bi-info-circle text-warning me-1" aria-hidden="true"></i>Verify the GCash receipt below before moving this order into production or shipping.
+        </div>
+      {% endif %}
       <form method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="status">
@@ -102,7 +107,10 @@
           {% endif %}
         </div>
         {% if order.payment.is_verified %}
-          <div class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Verified by {{ order.payment.verified_by }} on {{ order.payment.verified_at|date:"M j, Y g:i A" }}</div>
+          <div class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Verified by {{ order.payment.verified_by|default:"staff" }} on {{ order.payment.verified_at|date:"M j, Y g:i A" }}</div>
+          {% if order.status == "CANCELLED" %}
+            <p class="small text-muted mt-2 mb-0">This order was cancelled after GCash verification — arrange a customer refund if needed.</p>
+          {% endif %}
         {% elif order.status != "CANCELLED" %}
           <form method="post">
             {% csrf_token %}
@@ -115,7 +123,23 @@
           <p class="small text-muted mb-0">This order is cancelled, so the payment stays unverified.</p>
         {% endif %}
       {% else %}
-        <p class="small text-muted mb-0">Cash on Delivery — rider collects {{ order.payment.amount|peso }} upon handoff.</p>
+        {% if order.payment.is_verified %}
+          <div class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Cash collected · confirmed by {{ order.payment.verified_by|default:"staff" }} on {{ order.payment.verified_at|date:"M j, Y g:i A" }}</div>
+          {% if order.status == "CANCELLED" %}
+            <p class="small text-muted mt-2 mb-0">This order is marked cancelled after cash was recorded.</p>
+          {% endif %}
+        {% elif order.status == "CANCELLED" %}
+          <p class="small text-muted mb-0">Order cancelled — no cash to collect on delivery.</p>
+        {% else %}
+          <p class="small text-muted mb-3">Cash on Delivery — rider collects {{ order.payment.amount|peso }} upon handoff. Completing the order also records cash collection automatically.</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify">
+            <button class="btn btn-soft w-100" type="submit" data-confirm="Cash payment of {{ order.payment.amount|peso }} for {{ order.number }} will be marked as collected." data-confirm-title="Mark cash as collected?" data-confirm-tone="confirm" data-confirm-accept="Mark cash collected" data-confirm-detail="Records your name and timestamp on the payment record.">
+              <i class="bi bi-cash-coin" aria-hidden="true"></i> Mark Cash Collected
+            </button>
+          </form>
+        {% endif %}
       {% endif %}
     </div>
   </div>

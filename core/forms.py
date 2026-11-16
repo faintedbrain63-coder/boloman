@@ -80,3 +80,12 @@ class SiteSettingsForm(BootstrapFormMixin, forms.ModelForm):
             "gcash_account_name": forms.TextInput(attrs={"placeholder": "Name on the GCash account"}),
             "gcash_qr": forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
         }
+
+    def clean_gcash_number(self):
+        raw = (self.cleaned_data.get("gcash_number") or "").strip()
+        compact = raw.replace(" ", "").replace("-", "")
+        if compact.startswith("+63") and len(compact) == 13 and compact[1:].isdigit():
+            compact = "0" + compact[3:]
+        if not (len(compact) == 11 and compact.startswith("09") and compact.isdigit()):
+            raise forms.ValidationError("Enter an 11-digit PH mobile number starting with 09 (or +639).")
+        return compact

@@ -30,7 +30,14 @@
             </div>
             <div class="text-end">
               <strong class="fs-5 font-mono">{{ order.total|peso }}</strong>
-              <div class="small text-muted">{{ order.payment.get_method_display }}</div>
+              <div class="small text-muted">
+                {{ order.payment.get_method_display }}
+                {% if order.payment.method == "GCASH" %}
+                  · {% if order.payment.is_verified %}Verified{% elif order.status == "CANCELLED" %}Cancelled{% else %}Pending verification{% endif %}
+                {% else %}
+                  · {% if order.payment.is_verified %}Paid{% elif order.status == "CANCELLED" %}Cancelled{% else %}Pay on delivery{% endif %}
+                {% endif %}
+              </div>
             </div>
           </div>
           {% include "orders/_tracker.html" %}

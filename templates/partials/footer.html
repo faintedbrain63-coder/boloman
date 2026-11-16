@@ -33,7 +33,7 @@
           <li><i class="bi bi-geo-alt me-2 text-info" aria-hidden="true"></i>{{ site_settings.address }}</li>
           <li><i class="bi bi-telephone me-2 text-info" aria-hidden="true"></i><a href="tel:{{ site_settings.phone }}">{{ site_settings.phone }}</a></li>
           <li><i class="bi bi-envelope me-2 text-info" aria-hidden="true"></i><a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a></li>
-          <li><i class="bi bi-wallet2 me-2 text-info" aria-hidden="true"></i>Cash on Delivery &amp; GCash ({{ site_settings.gcash_number }})</li>
+          <li><i class="bi bi-wallet2 me-2 text-info" aria-hidden="true"></i>Cash on Delivery &amp; GCash{% if site_settings.gcash_number %} ({{ site_settings.gcash_number }}){% endif %}</li>
         </ul>
       </div>
     </div>

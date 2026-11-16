@@ -1,8 +1,10 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from core.forms import BootstrapFormMixin
+from core.models import SiteSettings
 from core.validators import validate_image_file
-from orders.models import Payment
+from orders.models import Order, Payment
 
 
 class CheckoutForm(BootstrapFormMixin, forms.Form):
@@ -42,7 +44,11 @@ class CheckoutForm(BootstrapFormMixin, forms.Form):
         label="GCash reference number",
         widget=forms.TextInput(attrs={"placeholder": "Reference number on the receipt"}),
     )
-    screenshot = forms.ImageField(required=False, validators=[validate_image_file], label="Payment screenshot")
+    screenshot = forms.FileField(
+        required=False,
+        label="Payment screenshot",
+        widget=forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
+    )
     save_profile = forms.BooleanField(required=False, initial=True, label="Save this as my delivery address")
 
     def __init__(self, *args, variant=None, **kwargs):
@@ -55,10 +61,42 @@ class CheckoutForm(BootstrapFormMixin, forms.Form):
     def clean(self):
         data = super().clean()
         if data.get("payment_method") == Payment.GCASH:
-            if not (data.get("gcash_reference") or "").strip():
+            settings_row = SiteSettings.load()
+            if not (settings_row.gcash_number or "").strip() and not settings_row.gcash_qr:
+                self.add_error(
+                    "payment_method",
+                    "GCash is not set up right now. Choose Cash on Delivery or message the shop.",
+                )
+            ref = " ".join((data.get("gcash_reference") or "").split())
+            if not ref:
                 self.add_error("gcash_reference", "Enter the GCash reference number from your receipt.")
-            if not data.get("screenshot"):
+            elif sum(ch.isalnum() for ch in ref) < 4 or not all(ch.isalnum() or ch in " -#" for ch in ref):
+                self.add_error("gcash_reference", "Enter a valid GCash reference number from your receipt.")
+            elif (
+                Payment.objects.filter(method=Payment.GCASH, gcash_reference__iexact=ref)
+                .exclude(order__status=Order.CANCELLED)
+                .exists()
+            ):
+                self.add_error(
+                    "gcash_reference",
+                    "This GCash reference number has already been used on another order.",
+                )
+            else:
+                data["gcash_reference"] = ref
+
+            uploaded = data.get("screenshot")
+            if not uploaded:
                 self.add_error("screenshot", "Upload a screenshot of the GCash payment.")
+            else:
+                try:
+                    validate_image_file(uploaded)
+                except ValidationError as exc:
+                    self.add_error("screenshot", exc)
+        else:
+            data["gcash_reference"] = ""
+            data["screenshot"] = None
+            self.errors.pop("gcash_reference", None)
+            self.errors.pop("screenshot", None)
         quantity = data.get("quantity")
         if self.variant and quantity and quantity > self.variant.quantity_on_hand:
             self.add_error("quantity", f"Only {self.variant.quantity_on_hand} left for this option.")

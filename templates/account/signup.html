@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load socialaccount %}
+{% load socialaccount static shop %}
 {% block title %}Create Account · {{ site_settings.business_name }}{% endblock %}
 {% block content %}
 <div class="container py-4">
@@ -26,22 +26,51 @@
     </div>
 
     <div class="col-lg-7 p-4 p-md-5 auth-form-pane">
-      <div class="mx-auto" style="max-width: 400px;">
+      <div class="mx-auto" style="max-width: 420px;">
+        {% if pending_checkout %}
+          <div class="pending-order-banner mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="status-badge badge-info"><i class="bi bi-bag-check-fill" aria-hidden="true"></i> Step 1 of 4 · Account Required</span>
+              <span class="font-mono fw-bold small">{{ pending_checkout.total|peso }}</span>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+              <div class="rounded-2 overflow-hidden border flex-shrink-0" style="width: 48px; height: 48px; background: #eef2f6;">
+                {% if pending_checkout.product.primary_image %}
+                  <img src="{{ pending_checkout.product.primary_image.image.url }}" alt="{{ pending_checkout.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                  <img src="{% static pending_checkout.product.category.placeholder %}" alt="{{ pending_checkout.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% endif %}
+              </div>
+              <div class="small">
+                <strong class="d-block text-dark">{{ pending_checkout.product.name }} × {{ pending_checkout.qty }}</strong>
+                <span class="text-muted">{{ pending_checkout.variant.option_label }}</span>
+              </div>
+            </div>
+            <div class="small text-muted mt-2">
+              Create your account below and you'll go straight to delivery &amp; GCash or Cash payment.
+            </div>
+          </div>
+        {% endif %}
+
         <span class="eyebrow"><i class="bi bi-person-plus" aria-hidden="true"></i> Quick Registration</span>
-        <h1 class="h3 fw-bold mb-1">Create your account</h1>
+        <h1 class="h3 fw-bold mb-1">{% if pending_checkout %}Create an account to checkout{% else %}Create your account{% endif %}</h1>
         <p class="text-muted small mb-4">Get instant access to custom ordering and live status tracking.</p>
 
-        <a class="btn btn-google" href="{% provider_login_url 'google' process='login' %}">
-          <i class="bi bi-google text-danger" aria-hidden="true"></i> Continue with Google
-        </a>
+        {% if google_login_enabled %}
+          <a class="btn btn-google" href="{% provider_login_url 'google' process='login' %}">
+            <i class="bi bi-google text-danger" aria-hidden="true"></i> Continue with Google
+          </a>
 
-        <div class="divider-text">or register with email</div>
+          <div class="divider-text">or register with email</div>
+        {% endif %}
 
         <form method="post" action="{% url 'account_signup' %}" novalidate>
           {% csrf_token %}
           {{ redirect_field }}
           {% include "partials/form_fields.html" %}
-          <button class="btn btn-accent btn-lg w-100 mt-2" type="submit">Create Account</button>
+          <button class="btn btn-accent btn-lg w-100 mt-2" type="submit">
+            {% if pending_checkout %}Create Account &amp; Continue to Checkout{% else %}Create Account{% endif %}
+          </button>
         </form>
 
         <p class="text-center small text-muted mb-0 mt-4">

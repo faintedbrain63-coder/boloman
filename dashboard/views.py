@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
@@ -13,11 +15,13 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 
 from accounts.models import CustomerProfile
 from core.forms import SiteSettingsForm
 from core.models import ContactMessage, SiteSettings
+from core.validators import validate_image_file
 from dashboard.decorators import staff_required
 from dashboard.forms import (
     AdjustmentForm,
@@ -32,9 +36,9 @@ from dashboard.forms import (
 from inventory.models import ProductVariant, StockMovement
 from inventory.services import InsufficientStock, move_stock
 from inventory.sku import build_sku
-from orders.models import Order, OrderItem, Payment
-from orders.services import set_order_status
-from store.models import Category, Product
+from orders.models import Order, OrderItem, OrderStatusHistory, Payment
+from orders.services import DuplicateGCashReference, PaymentVerificationRequired, set_order_status
+from store.models import Category, Product, ProductImage
 
 User = get_user_model()
 
@@ -170,9 +174,69 @@ def product_list(request):
     )
 
 
+MAX_PRODUCT_PHOTOS = 12
+
+
+def _accept_gallery_uploads(uploads, room):
+    """Keep valid new photos that still fit in the product gallery."""
+    accepted = []
+    errors = []
+    for upload in uploads:
+        if len(accepted) >= room:
+            errors.append(f"{upload.name}: this product already has {MAX_PRODUCT_PHOTOS} photos.")
+            continue
+        try:
+            validate_image_file(upload)
+        except ValidationError as exc:
+            errors.append(f"{upload.name}: {' '.join(exc.messages)}")
+        else:
+            accepted.append(upload)
+    return accepted, errors
+
+
+def _save_catalog_thumbnail(product, upload):
+    """Store the photo that the catalog and product cards show."""
+    try:
+        validate_image_file(upload)
+    except ValidationError as exc:
+        return f"{upload.name}: {' '.join(exc.messages)}"
+
+    primary = product.images.filter(is_primary=True).order_by("sort_order", "id").first()
+    if primary is None and product.images.count() >= MAX_PRODUCT_PHOTOS:
+        return f"{upload.name}: this product already has {MAX_PRODUCT_PHOTOS} photos. Remove one before setting a catalog thumbnail."
+
+    if primary is None:
+        primary = ProductImage(product=product, sort_order=0, alt_text=product.name, is_primary=True)
+        previous_name = ""
+    else:
+        previous_name = primary.image.name if primary.image else ""
+        primary.is_primary = True
+        if not primary.alt_text:
+            primary.alt_text = product.name
+    primary.image = upload
+    primary.save()
+    if previous_name and previous_name != primary.image.name and default_storage.exists(previous_name):
+        default_storage.delete(previous_name)
+    product.images.exclude(pk=primary.pk).update(is_primary=False)
+    return None
+
+
+def _keep_one_primary(product):
+    images = list(product.images.all())
+    primaries = [image for image in images if image.is_primary]
+    if len(primaries) > 1:
+        for image in primaries[1:]:
+            image.is_primary = False
+            image.save(update_fields=["is_primary"])
+    elif images and not primaries:
+        images[0].is_primary = True
+        images[0].save(update_fields=["is_primary"])
+
+
 @staff_required
 def product_edit(request, pk=None):
     product = get_object_or_404(Product, pk=pk) if pk else None
+    gallery_errors = []
     if request.method == "POST":
         form = ProductForm(request.POST, instance=product)
         formset = ImageFormSet(request.POST, request.FILES, instance=product or Product())
@@ -180,21 +244,42 @@ def product_edit(request, pk=None):
             product = form.save()
             formset.instance = product
             formset.save()
-            images = list(product.images.all())
-            primaries = [image for image in images if image.is_primary]
-            if len(primaries) > 1:
-                for image in primaries[1:]:
-                    image.is_primary = False
-                    image.save(update_fields=["is_primary"])
-            elif images and not primaries:
-                images[0].is_primary = True
-                images[0].save(update_fields=["is_primary"])
-            messages.success(request, "Product saved.")
+            thumbnail = request.FILES.get("thumbnail")
+            thumbnail_error = _save_catalog_thumbnail(product, thumbnail) if thumbnail else None
+            if thumbnail_error:
+                gallery_errors.append(thumbnail_error)
+            room = max(0, MAX_PRODUCT_PHOTOS - product.images.count())
+            accepted, extra_errors = _accept_gallery_uploads(request.FILES.getlist("gallery"), room)
+            gallery_errors.extend(extra_errors)
+            start = product.images.count()
+            for offset, upload in enumerate(accepted):
+                ProductImage.objects.create(
+                    product=product,
+                    image=upload,
+                    sort_order=start + offset,
+                    is_primary=not product.images.filter(is_primary=True).exists() and offset == 0,
+                )
+            _keep_one_primary(product)
+            if gallery_errors:
+                messages.warning(
+                    request,
+                    "Product saved. These photos were not added: " + " ".join(gallery_errors),
+                )
+            elif thumbnail:
+                messages.success(request, "Product saved. The catalog thumbnail is ready.")
+            elif accepted:
+                messages.success(request, f"Product saved with {len(accepted)} new photo{'s' if len(accepted) != 1 else ''}.")
+            else:
+                messages.success(request, "Product saved.")
             return redirect("dashboard:product_edit", pk=product.pk)
     else:
         form = ProductForm(instance=product)
         formset = ImageFormSet(instance=product or Product())
-    return render(request, "dashboard/product_form.html", {"form": form, "formset": formset, "product": product})
+    return render(
+        request,
+        "dashboard/product_form.html",
+        {"form": form, "formset": formset, "product": product, "gallery_errors": gallery_errors},
+    )
 
 
 @staff_required
@@ -362,10 +447,14 @@ def _filtered_orders(request):
         orders = orders.filter(payment__method=method)
     if verified == "pending":
         orders = orders.filter(payment__is_verified=False).exclude(status=Order.CANCELLED)
-    if start:
-        orders = orders.filter(created_at__date__gte=start)
-    if end:
-        orders = orders.filter(created_at__date__lte=end)
+    elif verified == "verified":
+        orders = orders.filter(payment__is_verified=True)
+    start_date = parse_date(start) if start else None
+    end_date = parse_date(end) if end else None
+    if start_date:
+        orders = orders.filter(created_at__date__gte=start_date)
+    if end_date:
+        orders = orders.filter(created_at__date__lte=end_date)
     if query:
         orders = orders.filter(Q(number__icontains=query) | Q(recipient_name__icontains=query) | Q(user__email__icontains=query))
     return orders, {
@@ -433,19 +522,39 @@ def order_detail(request, number):
                     set_order_status(order, form.cleaned_data["status"], request.user, form.cleaned_data["note"])
                 except InsufficientStock as exc:
                     messages.error(request, f"Not enough stock to reopen this order. Only {exc.available} left.")
+                except (PaymentVerificationRequired, DuplicateGCashReference) as exc:
+                    messages.error(request, str(exc))
                 else:
                     messages.success(request, "Status updated.")
                     return redirect("dashboard:order_detail", number=order.number)
         elif action == "verify":
-            payment = order.payment
-            if order.status == Order.CANCELLED:
-                messages.error(request, "This order is cancelled, so the payment stays unverified.")
-            elif payment.method == Payment.GCASH and not payment.is_verified:
-                payment.is_verified = True
-                payment.verified_by = request.user
-                payment.verified_at = timezone.now()
-                payment.save(update_fields=["is_verified", "verified_by", "verified_at"])
-                messages.success(request, "GCash payment marked as verified.")
+            with transaction.atomic():
+                locked_order = Order.objects.select_for_update().get(pk=order.pk)
+                payment = Payment.objects.select_for_update().get(order=locked_order)
+                if locked_order.status == Order.CANCELLED:
+                    messages.error(request, "This order is cancelled, so the payment stays unverified.")
+                elif not payment.is_verified:
+                    payment.is_verified = True
+                    payment.verified_by = request.user
+                    payment.verified_at = timezone.now()
+                    payment.save(update_fields=["is_verified", "verified_by", "verified_at"])
+                    OrderStatusHistory.objects.create(
+                        order=locked_order,
+                        from_status=locked_order.status,
+                        to_status=locked_order.status,
+                        changed_by=request.user,
+                        note=(
+                            f"GCash payment verified (Ref {payment.gcash_reference})"
+                            if payment.method == Payment.GCASH
+                            else "Cash on Delivery payment collected"
+                        ),
+                    )
+                    messages.success(
+                        request,
+                        "GCash payment marked as verified."
+                        if payment.method == Payment.GCASH
+                        else "Cash payment marked as collected.",
+                    )
             return redirect("dashboard:order_detail", number=order.number)
     return render(request, "dashboard/order_detail.html", {"order": order, "form": form})
 

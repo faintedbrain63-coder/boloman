@@ -12,29 +12,39 @@
 
 <div class="filter-bar mb-3">
   <form class="row g-2 align-items-end" method="get">
-    <div class="col-md-3">
+    <div class="col-md-4 col-lg-3">
       <label class="form-label" for="q">Search</label>
       <input class="form-control" id="q" name="q" value="{{ filters.q }}" placeholder="Order #, recipient, email…">
     </div>
-    <div class="col-sm-6 col-md-2">
+    <div class="col-sm-4 col-md-4 col-lg-2">
       <label class="form-label" for="status">Order Status</label>
       <select class="form-select" id="status" name="status">
         <option value="">All statuses</option>
         {% for value, label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
     </div>
-    <div class="col-sm-6 col-md-2">
+    <div class="col-sm-4 col-md-4 col-lg-2">
       <label class="form-label" for="method">Payment</label>
       <select class="form-select" id="method" name="method">
         <option value="">All methods</option>
         {% for value, label in methods %}<option value="{{ value }}" {% if filters.method == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
     </div>
-    <div class="col-6 col-md-2"><label class="form-label" for="start">From date</label><input class="form-control" id="start" type="date" name="start" value="{{ filters.start }}" placeholder="From date"></div>
-    <div class="col-6 col-md-2"><label class="form-label" for="end">To date</label><input class="form-control" id="end" type="date" name="end" value="{{ filters.end }}" placeholder="To date"></div>
-    {% if filters.verified %}<input type="hidden" name="verified" value="{{ filters.verified }}">{% endif %}
-    <div class="col-md-1 d-flex gap-1">
-      <button class="btn btn-teal w-100" type="submit">Go</button>
+    <div class="col-sm-4 col-md-4 col-lg-2">
+      <label class="form-label" for="verified">Payment Status</label>
+      <select class="form-select" id="verified" name="verified">
+        <option value="">All</option>
+        <option value="pending" {% if filters.verified == "pending" %}selected{% endif %}>Unverified / Unpaid</option>
+        <option value="verified" {% if filters.verified == "verified" %}selected{% endif %}>Verified / Paid</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2"><label class="form-label" for="start">From date</label><input class="form-control" id="start" type="date" name="start" value="{{ filters.start }}" placeholder="From date"></div>
+    <div class="col-6 col-md-3 col-lg-2"><label class="form-label" for="end">To date</label><input class="form-control" id="end" type="date" name="end" value="{{ filters.end }}" placeholder="To date"></div>
+    <div class="col-md-2 col-lg-auto d-flex gap-2">
+      <button class="btn btn-teal" type="submit">Filter</button>
+      {% if filters.q or filters.status or filters.method or filters.verified or filters.start or filters.end %}
+        <a class="btn btn-soft" href="{% url 'dashboard:orders' %}">Reset</a>
+      {% endif %}
     </div>
   </form>
 </div>
@@ -59,8 +69,14 @@
               {% if order.payment.method == "GCASH" %}
                 {% if order.payment.is_verified %}
                   <span class="status-badge badge-in ms-1">Verified</span>
-                {% else %}
+                {% elif order.status != "CANCELLED" %}
                   <span class="status-badge badge-low ms-1">Verify</span>
+                {% endif %}
+              {% else %}
+                {% if order.payment.is_verified %}
+                  <span class="status-badge badge-in ms-1">Paid</span>
+                {% elif order.status != "CANCELLED" %}
+                  <span class="status-badge badge-neutral ms-1">COD</span>
                 {% endif %}
               {% endif %}
             </td>

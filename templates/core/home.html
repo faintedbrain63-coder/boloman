@@ -2,7 +2,7 @@
 {% load static shop %}
 
 {% block extra_css %}
-  <link href="{% static 'css/landing.css' %}?v=4" rel="stylesheet">
+  <link href="{% static 'css/landing.css' %}?v=5" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -78,7 +78,7 @@
             <div class="holo-viewport" id="holo-viewport">
               <div class="holo-scanline" aria-hidden="true"></div>
               <span class="holo-method-chip" id="holo-method">DTF / Screen Print</span>
-              <img id="holo-photo" class="holo-photo" src="{% static 'img/studio/classic-cotton-tee.jpg' %}" alt="Live customizable merchandise mockup">
+              <img id="holo-photo" class="holo-photo" src="{% static 'img/landing_page_pics.jpg' %}" alt="1st Training Group sublimated jersey, front and back">
               <div class="holo-print-projection" aria-live="polite">
                 <span class="holo-print-label">LIVE PRINT PROOF</span>
                 <strong id="holo-print-text">BOLOMAN 26</strong>
@@ -200,29 +200,29 @@
       <div class="col-md-6 col-lg-3">
         <div class="pipeline-card reveal-stagger" style="--delay: 0ms;">
           <span class="pipeline-num">STEP 01</span>
-          <h3 class="h5 fw-bold">Select Verified SKU</h3>
-          <p class="small text-secondary mb-0">Pick exact garment color, shirt size (XS–3XL), cap fit, or tumbler capacity with live unit counts.</p>
+          <h3 class="h5 fw-bold">Sign In &amp; Pick Your Blank</h3>
+          <p class="small text-secondary mb-0">Log in to your customer account, select exact color, size or capacity, quantity, and attach your print notes.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
         <div class="pipeline-card reveal-stagger" style="--delay: 80ms;">
           <span class="pipeline-num">STEP 02</span>
-          <h3 class="h5 fw-bold">Attach Print Specs</h3>
-          <p class="small text-secondary mb-0">Enter roster names, jersey numbers, ink colors, or placement notes right inside the item configurator.</p>
+          <h3 class="h5 fw-bold">Confirm Delivery Address</h3>
+          <p class="small text-secondary mb-0">Enter your recipient name, mobile number, and delivery address, then verify your piece count and print specs.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
         <div class="pipeline-card reveal-stagger" style="--delay: 160ms;">
           <span class="pipeline-num">STEP 03</span>
-          <h3 class="h5 fw-bold">Atomic Checkout</h3>
-          <p class="small text-secondary mb-0">Stock is locked in PostgreSQL on submit. Pay via Cash on Delivery or upload a GCash reference screenshot.</p>
+          <h3 class="h5 fw-bold">Scan GCash QR or Send to Number</h3>
+          <p class="small text-secondary mb-0">Scan the shop's GCash QR code or enter the owner's GCash number in your GCash app, upload your receipt, or choose COD.</p>
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
         <div class="pipeline-card reveal-stagger" style="--delay: 240ms;">
           <span class="pipeline-num">STEP 04</span>
-          <h3 class="h5 fw-bold">Live Stage Telemetry</h3>
-          <p class="small text-secondary mb-0">Follow every timestamped transition in your portal from New Order through Press, Packing, and Delivery.</p>
+          <h3 class="h5 fw-bold">Place Order &amp; Track Live</h3>
+          <p class="small text-secondary mb-0">Your SKU stock is reserved on confirmation. Follow every stage in My Orders from New Order to Completed.</p>
         </div>
       </div>
     </div>
@@ -414,5 +414,5 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'js/landing.js' %}?v=4"></script>
+  <script src="{% static 'js/landing.js' %}?v=5"></script>
 {% endblock %}

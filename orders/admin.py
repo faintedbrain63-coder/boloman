@@ -1,7 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.utils import timezone
 
+from inventory.services import InsufficientStock
 from orders.models import Order, OrderItem, OrderStatusHistory, Payment
-from orders.services import set_order_status
+from orders.services import DuplicateGCashReference, PaymentVerificationRequired, set_order_status
 
 
 class OrderItemInline(admin.TabularInline):
@@ -58,7 +60,10 @@ class OrderAdmin(admin.ModelAdmin):
         obj.status = previous.status
         super().save_model(request, obj, form, change)
         if previous.status != new_status:
-            set_order_status(obj, new_status, request.user, note="Updated in Django admin")
+            try:
+                set_order_status(obj, new_status, request.user, note="Updated in Django admin")
+            except (InsufficientStock, PaymentVerificationRequired, DuplicateGCashReference) as exc:
+                self.message_user(request, str(exc), level=messages.ERROR)
 
 
 @admin.register(Payment)
@@ -67,3 +72,12 @@ class PaymentAdmin(admin.ModelAdmin):
     list_filter = ("method", "is_verified")
     search_fields = ("order__number", "gcash_reference")
     readonly_fields = ("order", "method", "amount", "created_at")
+
+    def save_model(self, request, obj, form, change):
+        if obj.is_verified and obj.order.status == Order.CANCELLED:
+            obj.is_verified = False
+            self.message_user(request, "Cancelled orders cannot be marked verified.", level=messages.ERROR)
+        elif obj.is_verified and not obj.verified_at:
+            obj.verified_by = obj.verified_by or request.user
+            obj.verified_at = timezone.now()
+        super().save_model(request, obj, form, change)

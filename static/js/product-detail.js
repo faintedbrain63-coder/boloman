@@ -1,4 +1,40 @@
 (function () {
+  const photo = document.getElementById("main-photo");
+  const thumbs = Array.from(document.querySelectorAll(".thumb"));
+  const countEl = document.getElementById("gallery-count");
+  if (photo && thumbs.length > 1) {
+    let index = thumbs.findIndex(function (thumb) { return thumb.classList.contains("is-active"); });
+    if (index < 0) index = 0;
+
+    function showPhoto(next) {
+      index = (next + thumbs.length) % thumbs.length;
+      const thumb = thumbs[index];
+      photo.src = thumb.dataset.src;
+      if (thumb.dataset.alt) photo.alt = thumb.dataset.alt;
+      thumbs.forEach(function (item) {
+        const active = item === thumb;
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      if (countEl) countEl.textContent = (index + 1) + " / " + thumbs.length;
+    }
+
+    const previous = document.getElementById("gallery-prev");
+    const next = document.getElementById("gallery-next");
+    if (previous) previous.addEventListener("click", function () { showPhoto(index - 1); });
+    if (next) next.addEventListener("click", function () { showPhoto(index + 1); });
+    thumbs.forEach(function (thumb, thumbIndex) {
+      thumb.addEventListener("click", function () { showPhoto(thumbIndex); });
+    });
+    document.addEventListener("keydown", function (event) {
+      const typing = event.target && (event.target.matches("input, textarea, select") || event.target.isContentEditable);
+      if (typing) return;
+      if (event.key === "ArrowLeft") showPhoto(index - 1);
+      if (event.key === "ArrowRight") showPhoto(index + 1);
+    });
+    showPhoto(index);
+  }
+
   const dataElement = document.getElementById("variant-data");
   if (!dataElement) return;
   const variants = JSON.parse(dataElement.textContent).variants;
@@ -176,15 +212,6 @@
       if (!notesInput) return;
       notesInput.value = chip.dataset.notePreset;
       notesInput.focus();
-    });
-  });
-
-  document.querySelectorAll(".thumb").forEach(function (thumb) {
-    thumb.addEventListener("click", function () {
-      const photo = document.getElementById("main-photo");
-      photo.src = thumb.dataset.src;
-      document.querySelectorAll(".thumb").forEach(function (item) { item.classList.remove("is-active"); });
-      thumb.classList.add("is-active");
     });
   });
 

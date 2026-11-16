@@ -41,7 +41,9 @@
           <div class="small">
             <strong>{{ order.payment.get_method_display }}</strong>
             {% if order.payment.method == "GCASH" %}
-              <div class="text-muted">Ref {{ order.payment.gcash_reference }} · {% if order.payment.is_verified %}Verified{% else %}Pending staff verification{% endif %}</div>
+              <div class="text-muted">Ref {{ order.payment.gcash_reference }} · {% if order.payment.is_verified %}Payment verified{% elif order.status == "CANCELLED" %}Order cancelled{% else %}Pending staff verification{% endif %}</div>
+            {% else %}
+              <div class="text-muted">{% if order.payment.is_verified %}Paid in cash{% elif order.status == "CANCELLED" %}Order cancelled{% else %}Pay {{ order.payment.amount|peso }} in cash upon delivery{% endif %}</div>
             {% endif %}
           </div>
         </div>

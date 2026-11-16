@@ -13,7 +13,7 @@ from inventory.models import ProductVariant, StockMovement
 from inventory.services import move_stock
 from orders.models import Order
 from orders.services import place_order, set_order_status
-from store.models import Category, Product
+from store.models import Category, Product, ProductImage
 
 
 class SalesAndInventoryTests(TestCase):
@@ -43,7 +43,7 @@ class SalesAndInventoryTests(TestCase):
         self.customer = User.objects.create_user(username="ana", email="ana@example.com", password="pass12345")
         self.client.force_login(self.staff)
 
-    def _order(self, method="COD", quantity=2):
+    def _order(self, method="COD", quantity=2, ref="REF12345"):
         return place_order(
             user=self.customer,
             variant=self.variant,
@@ -53,7 +53,8 @@ class SalesAndInventoryTests(TestCase):
             phone="09170000000",
             address="123 Print Street",
             payment_method=method,
-            gcash_reference="REF123" if method == "GCASH" else "",
+            gcash_reference=ref if method == "GCASH" else "",
+            screenshot=_png("receipt.png") if method == "GCASH" else None,
         )
 
     def test_revenue_keeps_centavos_and_ignores_cancelled_orders(self):
@@ -81,19 +82,53 @@ class SalesAndInventoryTests(TestCase):
         order = self._order(method="GCASH")
         response = self.client.get(reverse("dashboard:overview"))
         self.assertEqual(response.context["pending_gcash"], 1)
+        self.assertEqual(response.context["dash_pending_gcash"], 1)
         listed = self.client.get(reverse("dashboard:orders") + "?method=GCASH&verified=pending")
         self.assertContains(listed, order.number)
 
         set_order_status(order, Order.CANCELLED, self.staff, "Cancelled")
         response = self.client.get(reverse("dashboard:overview"))
         self.assertEqual(response.context["pending_gcash"], 0)
+        self.assertEqual(response.context["dash_pending_gcash"], 0)
         self.assertEqual(self.client.get(reverse("dashboard:orders")).context["summary"]["unverified_gcash"], 0)
         listed = self.client.get(reverse("dashboard:orders") + "?method=GCASH&verified=pending")
         self.assertNotContains(listed, order.number)
+        all_orders = self.client.get(reverse("dashboard:orders"))
+        self.assertNotContains(all_orders, '<span class="status-badge badge-low ms-1">Verify</span>')
 
         self.client.post(reverse("dashboard:order_detail", args=[order.number]), {"action": "verify"})
         order.payment.refresh_from_db()
         self.assertFalse(order.payment.is_verified)
+
+    def test_gcash_must_be_verified_before_fulfillment_and_cod_collects_on_completion(self):
+        gcash_order = self._order(method="GCASH", quantity=1, ref="GCASH9001")
+        detail_url = reverse("dashboard:order_detail", args=[gcash_order.number])
+
+        blocked = self.client.post(detail_url, {"action": "status", "status": Order.PROCESSING, "note": ""})
+        self.assertEqual(blocked.status_code, 200)
+        self.assertContains(blocked, "Verify the GCash payment")
+        gcash_order.refresh_from_db()
+        self.assertEqual(gcash_order.status, Order.NEW)
+
+        self.client.post(detail_url, {"action": "verify"})
+        gcash_order.payment.refresh_from_db()
+        self.assertTrue(gcash_order.payment.is_verified)
+        self.assertEqual(gcash_order.payment.verified_by, self.staff)
+
+        advanced = self.client.post(detail_url, {"action": "status", "status": Order.PROCESSING, "note": "Printing"})
+        self.assertRedirects(advanced, detail_url)
+        gcash_order.refresh_from_db()
+        self.assertEqual(gcash_order.status, Order.PROCESSING)
+
+        cod_order = self._order(method="COD", quantity=1)
+        cod_url = reverse("dashboard:order_detail", args=[cod_order.number])
+        self.assertFalse(cod_order.payment.is_verified)
+        self.client.post(cod_url, {"action": "status", "status": Order.COMPLETED, "note": "Delivered"})
+        cod_order.refresh_from_db()
+        cod_order.payment.refresh_from_db()
+        self.assertEqual(cod_order.status, Order.COMPLETED)
+        self.assertTrue(cod_order.payment.is_verified)
+        self.assertEqual(cod_order.payment.verified_by, self.staff)
 
     def test_stock_alerts_skip_hidden_products_and_inventory_cards_follow_filters(self):
         self.variant.quantity_on_hand = 2
@@ -181,6 +216,8 @@ class SalesAndInventoryTests(TestCase):
         self.assertFalse(image.is_valid())
         self.assertIn("image", image.errors)
 
+        self.assertEqual(ImageFormSet(instance=self.product).extra, 0)
+
         blank = ImageFormSet(
             data={
                 "images-TOTAL_FORMS": "1",
@@ -208,6 +245,101 @@ class SalesAndInventoryTests(TestCase):
         self.assertFalse(variant.is_valid())
         self.assertIn("color_name", variant.errors)
         self.assertIn("cost_price", variant.errors)
+
+    def test_new_product_thumbnail_is_the_photo_shown_in_the_catalog(self):
+        page = self.client.get(reverse("dashboard:product_new"))
+        self.assertContains(page, "Catalog thumbnail")
+        self.assertContains(page, 'name="thumbnail"')
+
+        response = self.client.post(
+            reverse("dashboard:product_new"),
+            {
+                "category": self.category.pk,
+                "name": "Thumbnail Mug",
+                "slug": "thumbnail-mug",
+                "description": "Shows this photo in the catalog.",
+                "cost_price": "40.00",
+                "base_price": "120.00",
+                "is_active": "on",
+                "images-TOTAL_FORMS": "0",
+                "images-INITIAL_FORMS": "0",
+                "images-MIN_NUM_FORMS": "0",
+                "images-MAX_NUM_FORMS": "1000",
+                "thumbnail": _png("catalog.png"),
+                "gallery": [_png("detail.png")],
+            },
+        )
+        product = Product.objects.get(slug="thumbnail-mug")
+        self.assertRedirects(response, reverse("dashboard:product_edit", args=[product.pk]))
+        self.assertEqual(product.images.count(), 2)
+        cover = product.primary_image
+        self.assertIn("catalog", cover.image.name)
+        self.assertFalse(product.images.exclude(pk=cover.pk).filter(is_primary=True).exists())
+        self.assertContains(self.client.get(reverse("store:product_list")), cover.image.url)
+        self.assertContains(self.client.get(reverse("dashboard:products")), cover.image.url)
+
+    def test_staff_uploads_several_photos_and_the_storefront_can_browse_them(self):
+        response = self.client.post(
+            reverse("dashboard:product_edit", args=[self.product.pk]),
+            {
+                "category": self.category.pk,
+                "name": self.product.name,
+                "slug": self.product.slug,
+                "description": "A mug.",
+                "cost_price": "80.00",
+                "base_price": "199.00",
+                "is_active": "on",
+                "images-TOTAL_FORMS": "0",
+                "images-INITIAL_FORMS": "0",
+                "images-MIN_NUM_FORMS": "0",
+                "images-MAX_NUM_FORMS": "1000",
+                "gallery": [_png("front.png"), _png("back.png"), _png("side.png")],
+            },
+        )
+        self.assertRedirects(response, reverse("dashboard:product_edit", args=[self.product.pk]))
+        images = list(ProductImage.objects.filter(product=self.product).order_by("id"))
+        self.assertEqual(len(images), 3)
+        self.assertTrue(images[0].is_primary)
+        self.assertFalse(any(image.is_primary for image in images[1:]))
+
+        page = self.client.get(self.product.get_absolute_url())
+        self.assertContains(page, images[0].image.url)
+        self.assertContains(page, images[1].image.url)
+        self.assertContains(page, images[2].image.url)
+        self.assertContains(page, 'id="gallery-next"')
+        self.assertContains(page, "Photo 2 of 3")
+
+        rejected = self.client.post(
+            reverse("dashboard:product_edit", args=[self.product.pk]),
+            {
+                "category": self.category.pk,
+                "name": self.product.name,
+                "slug": self.product.slug,
+                "description": "A mug.",
+                "cost_price": "80.00",
+                "base_price": "199.00",
+                "is_active": "on",
+                "images-TOTAL_FORMS": "3",
+                "images-INITIAL_FORMS": "3",
+                "images-MIN_NUM_FORMS": "0",
+                "images-MAX_NUM_FORMS": "1000",
+                "images-0-id": images[0].pk,
+                "images-0-alt_text": "Front",
+                "images-0-is_primary": "on",
+                "images-1-id": images[1].pk,
+                "images-1-alt_text": "Back",
+                "images-2-id": images[2].pk,
+                "images-2-alt_text": "Side",
+                "gallery": [
+                    _png("detail.png"),
+                    SimpleUploadedFile("notes.txt", b"not an image", content_type="text/plain"),
+                ],
+            },
+            follow=True,
+        )
+        self.assertContains(rejected, "notes.txt")
+        self.assertEqual(ProductImage.objects.filter(product=self.product).count(), 4)
+        self.assertContains(rejected, "Front")
 
     def test_blank_variant_prices_use_the_product_cost_and_selling_price(self):
         self.product.cost_price = Decimal("80.00")

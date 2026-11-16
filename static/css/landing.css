@@ -283,7 +283,8 @@
   border-radius: 16px;
   background: #0b1120;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  height: 280px;
+  height: auto;
+  aspect-ratio: 3 / 2;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -297,7 +298,7 @@
     linear-gradient(180deg, rgba(5, 8, 17, 0.25) 0%, rgba(5, 8, 17, 0.62) 100%),
     radial-gradient(circle at 50% 48%, var(--holo-tint), transparent 72%);
   mix-blend-mode: hard-light;
-  opacity: 0.42;
+  opacity: 0.16;
   pointer-events: none;
   transition: background 0.3s ease;
 }
@@ -310,6 +311,7 @@
 .holo-photo.is-switching { transform: scale(1.06); opacity: 0.72; }
 .holo-print-projection {
   position: absolute;
+  bottom: 0.7rem;
   z-index: 3;
   padding: 0.55rem 1.05rem;
   border-radius: 12px;

@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.db import models
+from django.core.files.storage import default_storage
+from django.db import models, transaction
 from django.urls import reverse
 
 from core.validators import validate_image_file
@@ -162,3 +163,10 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.get_method_display()} · {self.order.number}"
+
+    def delete(self, *args, **kwargs):
+        screenshot_name = self.screenshot.name if self.screenshot else ""
+        result = super().delete(*args, **kwargs)
+        if screenshot_name:
+            transaction.on_commit(lambda: default_storage.exists(screenshot_name) and default_storage.delete(screenshot_name))
+        return result

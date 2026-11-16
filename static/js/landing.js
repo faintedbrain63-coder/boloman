@@ -84,14 +84,14 @@
       skuPrefix: "CTN",
       price: "₱350.00",
       url: "/products/?category=cotton-shirts",
-      photo: "/static/img/studio/classic-cotton-tee.jpg",
+      photo: "/static/img/landing_page_pics.jpg",
     },
     jersey: {
       method: "Full Dye-Sublimation",
       skuPrefix: "SUB",
       price: "₱650.00",
       url: "/products/?category=sublimated-shirts",
-      photo: "/static/img/studio/full-sublimation-jersey.jpg",
+      photo: "/static/img/landing_page_pics.jpg",
     },
     mug: {
       method: "UV / Wrap Sublimation",

@@ -18,13 +18,15 @@
         </div>
         <p class="small mb-0">Placed {{ order.created_at|date:"F j, Y · g:i A" }}</p>
       </div>
-      {% if order.user_id == user.id and order.status == "NEW" %}
+      {% if order.user_id == user.id and order.status == "NEW" and not order.payment.is_verified %}
         <form method="post" action="{% url 'orders:cancel' order.number %}">
           {% csrf_token %}
           <button class="btn btn-outline-light btn-sm" type="submit" data-confirm="Reserved stock for {{ order.number }} will be returned." data-confirm-title="Cancel this order?" data-confirm-tone="danger" data-confirm-accept="Cancel order" data-confirm-detail="You can only cancel while the order is still new.">
             <i class="bi bi-x-circle text-danger me-1" aria-hidden="true"></i> Cancel Order
           </button>
         </form>
+      {% elif order.user_id == user.id and order.status == "NEW" and order.payment.is_verified %}
+        <span class="small text-white-50">Payment verified — message the shop if you need changes.</span>
       {% endif %}
     </div>
   </div>
@@ -80,8 +82,20 @@
             <div class="mt-2">
               {% if order.payment.is_verified %}
                 <span class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Payment Verified</span>
+              {% elif order.status == "CANCELLED" %}
+                <span class="status-badge badge-neutral">Order Cancelled · Unverified</span>
               {% else %}
                 <span class="status-badge badge-low"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Staff Verification</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="mt-2">
+              {% if order.payment.is_verified %}
+                <span class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Cash Paid</span>
+              {% elif order.status == "CANCELLED" %}
+                <span class="status-badge badge-neutral">Order Cancelled · No payment due</span>
+              {% else %}
+                <span class="status-badge badge-info"><i class="bi bi-cash-coin" aria-hidden="true"></i> Prepare {{ order.payment.amount|peso }} on delivery</span>
               {% endif %}
             </div>
           {% endif %}

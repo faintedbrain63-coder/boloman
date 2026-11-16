@@ -92,7 +92,7 @@ ImageFormSet = inlineformset_factory(
     Product,
     ProductImage,
     form=ProductImageForm,
-    extra=1,
+    extra=0,
     can_delete=True,
 )
 

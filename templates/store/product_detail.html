@@ -22,6 +22,15 @@
           {% else %}
             <img id="main-photo" src="{% static product.category.placeholder %}" alt="{{ product.name }}" onload="this.parentElement.classList.remove('skeleton')">
           {% endif %}
+          {% if product.images.all|length > 1 %}
+            <button type="button" class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous photo">
+              <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="gallery-nav gallery-next" id="gallery-next" aria-label="Next photo">
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
+            <span class="gallery-count" id="gallery-count">1 / {{ product.images.all|length }}</span>
+          {% endif %}
           <div class="gallery-overlay-pill" id="stage-live-pill">
             <span class="swatch-dot" style="background: #0d9488;"></span>
             <span>{{ product.category.code }} Studio Preview</span>
@@ -29,9 +38,9 @@
         </div>
 
         {% if product.images.all|length > 1 %}
-          <div class="gallery-thumbs">
+          <div class="gallery-thumbs" role="tablist" aria-label="Product photos">
             {% for image in product.images.all %}
-              <button type="button" class="thumb {% if forloop.first %}is-active{% endif %}" data-src="{{ image.image.url }}" aria-label="Show photo {{ forloop.counter }} of {{ product.name }}">
+              <button type="button" class="thumb {% if image.pk == product.primary_image.pk %}is-active{% endif %}" role="tab" data-src="{{ image.image.url }}" data-alt="{{ image.alt_text|default:product.name }}" aria-label="Photo {{ forloop.counter }} of {{ product.images.all|length }}, {{ image.alt_text|default:product.name }}">
                 <img src="{{ image.image.url }}" alt="">
               </button>
             {% endfor %}
@@ -153,13 +162,19 @@
             </div>
           </div>
 
-          <button class="btn btn-accent btn-lg w-100" id="order-btn" type="submit">
-            <i class="bi bi-bag-check-fill" aria-hidden="true"></i> Order Now — Continue to Checkout
-          </button>
-
-          {% if not user.is_authenticated %}
+          {% if user.is_authenticated %}
+            <button class="btn btn-accent btn-lg w-100" id="order-btn" type="submit">
+              <i class="bi bi-bag-check-fill" aria-hidden="true"></i> Buy Now — Continue to Checkout
+            </button>
             <p class="form-text text-center mb-0 mt-2">
-              <i class="bi bi-shield-lock" aria-hidden="true"></i> Sign-in required to reserve stock. You'll return straight to checkout after signing in.
+              <i class="bi bi-person-check" aria-hidden="true"></i> Signed in as <strong>{{ user.email }}</strong> · Next: delivery address &amp; GCash QR / number or Cash payment.
+            </p>
+          {% else %}
+            <button class="btn btn-accent btn-lg w-100" id="order-btn" type="submit">
+              <i class="bi bi-shield-lock-fill" aria-hidden="true"></i> Sign In First to Buy Online
+            </button>
+            <p class="form-text text-center mb-0 mt-2">
+              <i class="bi bi-arrow-return-right" aria-hidden="true"></i> Customer login is required before buying online. Pick your options above — after signing in or <a class="fw-semibold" href="{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}">creating an account</a>, you'll go straight to checkout.
             </p>
           {% endif %}
         </form>
@@ -176,7 +191,7 @@
             </select>
             <label class="form-label" for="qty-fallback">Quantity</label>
             <input class="form-control mb-3" style="max-width: 120px;" id="qty-fallback" name="qty" type="number" min="1" value="1" placeholder="1">
-            <button class="btn btn-accent w-100" type="submit">Order Now</button>
+            <button class="btn btn-accent w-100" type="submit">{% if user.is_authenticated %}Buy Now — Continue to Checkout{% else %}Sign In First to Buy Online{% endif %}</button>
           </form>
         </noscript>
       {% else %}
@@ -200,4 +215,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/product-detail.js' %}?v=7"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/product-detail.js' %}?v=8"></script>{% endblock %}
