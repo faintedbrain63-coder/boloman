@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Log out · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1 class="h3">Log out?</h1>
+      <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        {{ redirect_field }}
+        <button class="btn btn-accent" type="submit">Log out</button>
+        <a class="btn btn-outline-secondary" href="{% url 'home' %}">Stay signed in</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

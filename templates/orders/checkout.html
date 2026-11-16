@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static shop %}
+{% block title %}Checkout · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h1 class="h2 fw-bold mb-1">Secure Order Checkout</h1>
+        <p class="small mb-0">Your selected blank SKU will be locked and deducted upon confirmation.</p>
+      </div>
+      <div class="checkout-steps" aria-label="Checkout progress">
+        <div class="checkout-step is-done">
+          <span class="num"><i class="bi bi-check2" aria-hidden="true"></i></span>
+          <span>Configure</span>
+        </div>
+        <span class="checkout-sep" aria-hidden="true"></span>
+        <div class="checkout-step is-active" aria-current="step">
+          <span class="num">2</span>
+          <span>Delivery &amp; Pay</span>
+        </div>
+        <span class="checkout-sep" aria-hidden="true"></span>
+        <div class="checkout-step">
+          <span class="num">3</span>
+          <span>Confirmation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-4 py-lg-5">
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-5 order-lg-2">
+      <div class="panel p-4" style="position: sticky; top: 5.5rem;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="eyebrow mb-0">Order Summary</span>
+          <a class="small fw-semibold" href="{{ product.get_absolute_url }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Change option</a>
+        </div>
+
+        <div class="d-flex gap-3 align-items-center pb-3 mb-3 border-bottom">
+          <div class="rounded-3 overflow-hidden border flex-shrink-0" style="width: 84px; height: 84px; background: #eef2f6;">
+            {% if product.primary_image %}
+              <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+              <img src="{% static product.category.placeholder %}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+          </div>
+          <div>
+            <div class="small text-muted fw-semibold">{{ product.category.name }}</div>
+            <h2 class="h6 fw-bold mb-1">{{ product.name }}</h2>
+            <div class="small text-muted mb-1">
+              <span class="swatch-dot me-1" style="background: {{ variant.color_hex }}"></span>{{ variant.option_label }}
+            </div>
+            <span class="sku-code">{{ variant.sku }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between small mb-2">
+          <span class="text-muted">Unit price</span>
+          <span class="font-mono fw-semibold">{{ variant.price|peso }}</span>
+        </div>
+        <div class="d-flex justify-content-between small mb-2">
+          <span class="text-muted">Quantity</span>
+          <span class="font-mono fw-semibold" id="summary-qty">{{ form.quantity.value|default:1 }}</span>
+        </div>
+        <div class="d-flex justify-content-between small mb-3">
+          <span class="text-muted">Warehouse stock</span>
+          <span class="{% if variant.quantity_on_hand <= variant.reorder_level %}text-warning fw-bold{% else %}text-success fw-semibold{% endif %}">
+            {% if variant.quantity_on_hand == 0 %}Out of stock
+            {% elif variant.quantity_on_hand <= variant.reorder_level %}Only {{ variant.quantity_on_hand }} left
+            {% else %}{{ variant.quantity_on_hand }} units available{% endif %}
+          </span>
+        </div>
+
+        <div class="order-summary-dock mb-0">
+          <span class="fw-bold text-white">Total Due</span>
+          <span class="total-val" data-unit-price="{{ variant.price }}">{{ variant.price|peso }}</span>
+        </div>
+        <p class="form-text mb-0 mt-2 text-center">
+          <i class="bi bi-shield-check me-1 text-teal" aria-hidden="true"></i>Atomic PostgreSQL stock reservation active
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-7 order-lg-1">
+      <form method="post" enctype="multipart/form-data" novalidate class="d-grid gap-4">
+        {% csrf_token %}
+        <input type="hidden" name="variant" value="{{ variant.id }}">
+
+        <div class="panel p-4">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="step-pill">1</span>
+            <h2 class="h5 mb-0">Recipient &amp; Delivery Address</h2>
+          </div>
+          <p class="text-muted small mb-3">Where should our courier deliver your finished custom order?</p>
+
+          <div class="row g-3">
+            <div class="col-md-7 {% if form.recipient_name.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.recipient_name.id_for_label }}">Recipient full name <span class="req">*</span></label>
+              {{ form.recipient_name }}
+              {% for error in form.recipient_name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-5 {% if form.phone.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.phone.id_for_label }}">Mobile number <span class="req">*</span></label>
+              {{ form.phone }}
+              {% for error in form.phone.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 {% if form.address_line.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.address_line.id_for_label }}">Street address, building, barangay <span class="req">*</span></label>
+              {{ form.address_line }}
+              {% for error in form.address_line.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-5 {% if form.city.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.city.id_for_label }}">City / Municipality <span class="req">*</span></label>
+              {{ form.city }}
+              {% for error in form.city.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4 {% if form.province.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.province.id_for_label }}">Province / Region <span class="req">*</span></label>
+              {{ form.province }}
+              {% for error in form.province.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-3 {% if form.postal_code.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.postal_code.id_for_label }}">Postal code</label>
+              {{ form.postal_code }}
+              {% for error in form.postal_code.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="form-check mt-3">
+            {{ form.save_profile }}
+            <label class="form-check-label small" for="{{ form.save_profile.id_for_label }}">{{ form.save_profile.label }}</label>
+          </div>
+        </div>
+
+        <div class="panel p-4">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="step-pill">2</span>
+            <h2 class="h5 mb-0">Quantity &amp; Print Specifications</h2>
+          </div>
+          <p class="text-muted small mb-3">Review piece count and personalization instructions for our press floor.</p>
+
+          <div class="row g-3">
+            <div class="col-sm-4 {% if form.quantity.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.quantity.id_for_label }}">Quantity <span class="req">*</span></label>
+              <input class="form-control font-mono fw-bold" type="number" name="quantity" id="{{ form.quantity.id_for_label }}" min="1" max="{{ variant.quantity_on_hand }}" value="{{ form.quantity.value|default:1 }}" required>
+              <div class="form-text">Max {{ variant.quantity_on_hand }} available</div>
+              {% for error in form.quantity.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-sm-8 {% if form.customization_notes.errors %}field-error{% endif %}">
+              <label class="form-label" for="{{ form.customization_notes.id_for_label }}">Customization notes <span class="text-muted fw-normal">(optional)</span></label>
+              {{ form.customization_notes }}
+              {% if form.customization_notes.help_text %}<div class="form-text">{{ form.customization_notes.help_text }}</div>{% endif %}
+              {% for error in form.customization_notes.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="panel p-4">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="step-pill">3</span>
+            <h2 class="h5 mb-0">Payment Method</h2>
+          </div>
+          <p class="text-muted small mb-3">Select Cash on Delivery or instant GCash transfer.</p>
+
+          <div class="payment-grid mb-3">
+            {% for radio in form.payment_method %}
+              <label class="payment-option" for="{{ radio.id_for_label }}">
+                {{ radio.tag }}
+                <div>
+                  <strong class="d-block">
+                    {% if radio.data.value == "COD" %}
+                      <i class="bi bi-truck text-teal me-1" aria-hidden="true"></i>
+                    {% else %}
+                      <i class="bi bi-wallet2 text-primary me-1" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ radio.choice_label }}
+                  </strong>
+                  <span class="small text-muted">
+                    {% if radio.data.value == "COD" %}Pay in cash upon delivery handoff.{% else %}Transfer via GCash &amp; upload receipt screenshot.{% endif %}
+                  </span>
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+          {% for error in form.payment_method.errors %}<div class="invalid-feedback d-block mb-2">{{ error }}</div>{% endfor %}
+
+          <div id="gcash-panel" class="gcash-box mb-2" hidden>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom border-primary border-opacity-25">
+              <div>
+                <div class="small text-muted">Send exact amount (<strong class="font-mono" data-unit-price="{{ variant.price }}">{{ variant.price|peso }}</strong>) to GCash:</div>
+                <div class="fs-5 fw-bold text-dark font-mono">{{ site_settings.gcash_number }} <span class="fs-6 fw-semibold text-muted">· {{ site_settings.gcash_account_name }}</span></div>
+              </div>
+              <button type="button" class="btn btn-soft btn-sm" id="copy-gcash" data-number="{{ site_settings.gcash_number }}">
+                <i class="bi bi-clipboard" aria-hidden="true"></i> Copy Number
+              </button>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6 {% if form.gcash_reference.errors %}field-error{% endif %}">
+                <label class="form-label" for="{{ form.gcash_reference.id_for_label }}">GCash reference number <span class="req">*</span></label>
+                {{ form.gcash_reference }}
+                {% for error in form.gcash_reference.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-md-6 {% if form.screenshot.errors %}field-error{% endif %}">
+                <label class="form-label" for="{{ form.screenshot.id_for_label }}">Payment screenshot <span class="req">*</span></label>
+                {{ form.screenshot }}
+                <div class="form-text">JPEG, PNG, or WebP (max 5 MB).</div>
+                {% for error in form.screenshot.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+            <img id="shot-preview" alt="Preview of your payment screenshot" class="img-fluid rounded border mt-3" style="max-height: 220px;" hidden>
+          </div>
+
+          {% if form.non_field_errors %}<div class="alert alert-danger mt-3 mb-0">{{ form.non_field_errors }}</div>{% endif %}
+
+          <button class="btn btn-accent btn-lg w-100 mt-3" type="submit" {% if variant.quantity_on_hand == 0 %}disabled{% endif %}>
+            <i class="bi bi-lock-fill" aria-hidden="true"></i> Confirm &amp; Place Order · <span class="font-mono" data-unit-price="{{ variant.price }}">{{ variant.price|peso }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/checkout.js' %}?v=7"></script>{% endblock %}

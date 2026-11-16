@@ -1,0 +1,61 @@
+{% load static %}
+<a class="brand text-white mb-2 px-2 py-1" href="{% url 'dashboard:overview' %}">
+  <img src="{% static 'img/mark.svg' %}" alt="">
+  <span>
+    {{ site_settings.business_name }}
+    <span class="brand-sub" style="color: #94a3b8;">Staff Operations</span>
+  </span>
+</a>
+
+<div class="side-group">Analytics</div>
+<a class="side-link {% if request.resolver_match.url_name == 'overview' %}is-active{% endif %}" href="{% url 'dashboard:overview' %}">
+  <span class="side-label"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i> Overview</span>
+</a>
+
+<div class="side-group">Fulfillment</div>
+<a class="side-link {% if 'order' in request.resolver_match.url_name %}is-active{% endif %}" href="{% url 'dashboard:orders' %}">
+  <span class="side-label"><i class="bi bi-receipt-cutoff" aria-hidden="true"></i> Orders</span>
+  {% if dash_pending_gcash %}
+    <span class="badge rounded-pill text-bg-warning" title="GCash payments waiting verification">{{ dash_pending_gcash }}</span>
+  {% elif dash_new_orders %}
+    <span class="badge rounded-pill text-bg-info">{{ dash_new_orders }}</span>
+  {% endif %}
+</a>
+
+<div class="side-group">Catalog</div>
+<a class="side-link {% if 'product' in request.resolver_match.url_name or 'variant' in request.resolver_match.url_name %}is-active{% endif %}" href="{% url 'dashboard:products' %}">
+  <span class="side-label"><i class="bi bi-bag" aria-hidden="true"></i> Products &amp; Variants</span>
+</a>
+<a class="side-link {% if 'categor' in request.resolver_match.url_name %}is-active{% endif %}" href="{% url 'dashboard:categories' %}">
+  <span class="side-label"><i class="bi bi-tags" aria-hidden="true"></i> Categories</span>
+</a>
+
+<div class="side-group">Warehouse &amp; Stock</div>
+<a class="side-link {% if request.resolver_match.url_name == 'inventory' %}is-active{% endif %}" href="{% url 'dashboard:inventory' %}">
+  <span class="side-label"><i class="bi bi-boxes" aria-hidden="true"></i> Inventory Overview</span>
+  {% if dash_low_stock %}<span class="badge rounded-pill text-bg-danger" title="Low or out of stock SKUs">{{ dash_low_stock }}</span>{% endif %}
+</a>
+<a class="side-link {% if request.resolver_match.url_name == 'stock_in' %}is-active{% endif %}" href="{% url 'dashboard:stock_in' %}">
+  <span class="side-label"><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Receive Stock In</span>
+</a>
+<a class="side-link {% if request.resolver_match.url_name == 'stock_adjust' %}is-active{% endif %}" href="{% url 'dashboard:stock_adjust' %}">
+  <span class="side-label"><i class="bi bi-sliders" aria-hidden="true"></i> Stock Adjustment</span>
+</a>
+<a class="side-link {% if request.resolver_match.url_name == 'movements' %}is-active{% endif %}" href="{% url 'dashboard:movements' %}">
+  <span class="side-label"><i class="bi bi-journal-text" aria-hidden="true"></i> Movement Ledger</span>
+</a>
+
+<div class="side-group">CRM &amp; Configuration</div>
+<a class="side-link {% if request.resolver_match.url_name == 'customers' %}is-active{% endif %}" href="{% url 'dashboard:customers' %}">
+  <span class="side-label"><i class="bi bi-people" aria-hidden="true"></i> Customers</span>
+</a>
+<a class="side-link {% if request.resolver_match.url_name == 'messages' %}is-active{% endif %}" href="{% url 'dashboard:messages' %}">
+  <span class="side-label"><i class="bi bi-envelope" aria-hidden="true"></i> Inquiries</span>
+  {% if dash_unread %}<span class="badge rounded-pill text-bg-warning">{{ dash_unread }}</span>{% endif %}
+</a>
+<a class="side-link {% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}" href="{% url 'dashboard:settings' %}">
+  <span class="side-label"><i class="bi bi-gear" aria-hidden="true"></i> Site &amp; GCash Settings</span>
+</a>
+<a class="side-link" href="{% url 'admin:index' %}">
+  <span class="side-label"><i class="bi bi-database-gear" aria-hidden="true"></i> Backup Django Admin</span>
+</a>

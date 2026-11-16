@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load shop %}
+{% block title %}My Orders · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <span class="eyebrow" style="color: #5eead4;"><i class="bi bi-box-seam" aria-hidden="true"></i> Live Order Telemetry</span>
+      <h1 class="h2 fw-bold mb-1">My Custom Orders</h1>
+      <p class="small mb-0">Track every print stage from SKU reservation through press, packing, and delivery.</p>
+    </div>
+    <a class="btn btn-accent" href="{% url 'store:product_list' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Start New Order</a>
+  </div>
+</section>
+
+<div class="container py-4 py-lg-5" style="max-width: 960px;">
+  {% if orders %}
+    <div class="d-grid gap-3">
+      {% for order in orders %}
+        <a class="order-card panel text-decoration-none text-reset" href="{% url 'orders:detail' order.number %}">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3 pb-3 border-bottom">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <strong class="font-mono fs-6">{{ order.number }}</strong>
+                <span class="status-badge {{ order.status|order_badge_class }}">{{ order.status_label }}</span>
+              </div>
+              <div class="text-muted small mt-1">
+                Placed {{ order.created_at|date:"M j, Y · g:i A" }} · <strong>{{ order.items.all.0.product_name }}</strong> ({{ order.items.all.0.option_label }})
+              </div>
+            </div>
+            <div class="text-end">
+              <strong class="fs-5 font-mono">{{ order.total|peso }}</strong>
+              <div class="small text-muted">{{ order.payment.get_method_display }}</div>
+            </div>
+          </div>
+          {% include "orders/_tracker.html" %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    {% include "partials/empty.html" with title="No custom orders yet" body="Choose a shirt, jersey, mug, tumbler, or cap from our catalog and your live 5-stage production tracker will appear here." %}
+    <div class="text-center mt-3"><a class="btn btn-accent" href="{% url 'store:product_list' %}">Explore Catalog</a></div>
+  {% endif %}
+</div>
+{% endblock %}

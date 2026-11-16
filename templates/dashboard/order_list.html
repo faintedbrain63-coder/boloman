@@ -1,0 +1,78 @@
+{% extends "dashboard/base.html" %}
+{% load shop %}
+{% block heading %}Order Management{% endblock %}
+{% block subheading %}<div class="small text-muted">Review customization notes, verify GCash payments, and advance production status</div>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">All Orders</div><strong class="fs-4">{{ summary.total }}</strong></div></div>
+  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">New Orders</div><strong class="fs-4 text-primary">{{ summary.new }}</strong></div></div>
+  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">In Production / Transit</div><strong class="fs-4">{{ summary.active }}</strong></div></div>
+  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">Unverified GCash</div><strong class="fs-4 text-warning">{{ summary.unverified_gcash }}</strong></div></div>
+</div>
+
+<div class="filter-bar mb-3">
+  <form class="row g-2 align-items-end" method="get">
+    <div class="col-md-3">
+      <label class="form-label" for="q">Search</label>
+      <input class="form-control" id="q" name="q" value="{{ filters.q }}" placeholder="Order #, recipient, email…">
+    </div>
+    <div class="col-sm-6 col-md-2">
+      <label class="form-label" for="status">Order Status</label>
+      <select class="form-select" id="status" name="status">
+        <option value="">All statuses</option>
+        {% for value, label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-2">
+      <label class="form-label" for="method">Payment</label>
+      <select class="form-select" id="method" name="method">
+        <option value="">All methods</option>
+        {% for value, label in methods %}<option value="{{ value }}" {% if filters.method == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2"><label class="form-label" for="start">From date</label><input class="form-control" id="start" type="date" name="start" value="{{ filters.start }}"></div>
+    <div class="col-6 col-md-2"><label class="form-label" for="end">To date</label><input class="form-control" id="end" type="date" name="end" value="{{ filters.end }}"></div>
+    <div class="col-md-1 d-flex gap-1">
+      <button class="btn btn-teal w-100" type="submit">Go</button>
+    </div>
+  </form>
+</div>
+
+<div class="panel overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Order #</th><th>Customer</th><th>Status</th><th>Payment</th><th>Total</th><th>Placed</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for order in page %}
+          <tr>
+            <td><a class="fw-bold" href="{% url 'dashboard:order_detail' order.number %}">{{ order.number }}</a></td>
+            <td>
+              <div class="fw-semibold">{{ order.recipient_name }}</div>
+              <div class="small text-muted">{{ order.user.email }}</div>
+            </td>
+            <td><span class="status-badge {{ order.status|order_badge_class }}">{{ order.status_label }}</span></td>
+            <td>
+              <span class="small fw-medium">{{ order.payment.get_method_display }}</span>
+              {% if order.payment.method == "GCASH" %}
+                {% if order.payment.is_verified %}
+                  <span class="status-badge badge-in ms-1">Verified</span>
+                {% else %}
+                  <span class="status-badge badge-low ms-1">Verify</span>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td class="fw-bold">{{ order.total|peso }}</td>
+            <td class="small text-muted">{{ order.created_at|date:"M j, Y · g:i A" }}</td>
+            <td class="text-end"><a class="btn btn-soft btn-sm" href="{% url 'dashboard:order_detail' order.number %}">Manage</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No orders match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

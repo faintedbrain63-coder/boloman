@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}Generate Color × Size Matrix{% endblock %}
+{% block subheading %}<div class="small text-muted"><a href="{% url 'dashboard:variants' product.pk %}">← Back to {{ product.name }} variants</a></div>{% endblock %}
+{% block content %}
+<div class="panel p-4 p-lg-5" style="max-width: 760px;">
+  <p class="text-muted small mb-4">Bulk-generate SKUs for <strong>{{ product.name }}</strong>. Existing combinations are skipped safely, and any opening stock is logged to the ledger.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-accent" type="submit"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Generate Variants</button>
+      <a class="btn btn-soft" href="{% url 'dashboard:variants' product.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

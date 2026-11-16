@@ -1,0 +1,21 @@
+{% if order.status == "CANCELLED" %}
+  <div class="d-flex align-items-center gap-2 p-2 px-3 rounded" style="background: var(--danger-bg); color: var(--danger);">
+    <i class="bi bi-x-octagon-fill" aria-hidden="true"></i>
+    <strong class="small">Order Cancelled — reserved stock has been returned to inventory.</strong>
+  </div>
+{% else %}
+  <ol class="tracker" aria-label="Order fulfillment progress">
+    {% for step in order.tracker_steps %}
+      <li class="{% if step.done %}is-done{% elif step.current %}is-current{% endif %}" {% if step.current %}aria-current="step"{% endif %}>
+        <span class="step-dot">
+          {% if step.done %}
+            <i class="bi bi-check-lg" aria-hidden="true"></i>
+          {% else %}
+            {{ forloop.counter }}
+          {% endif %}
+        </span>
+        <span>{{ step.label }}</span>
+      </li>
+    {% endfor %}
+  </ol>
+{% endif %}

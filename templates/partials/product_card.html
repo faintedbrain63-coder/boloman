@@ -1,0 +1,47 @@
+{% load static shop %}
+<article class="product-card reveal">
+  <a class="product-media skeleton" href="{{ product.get_absolute_url }}">
+    <div class="product-badges">
+      {% if product.total_stock == 0 %}
+        <span class="product-badge" style="background: rgba(185, 28, 28, 0.9);">Sold out</span>
+      {% elif product.is_featured %}
+        <span class="product-badge">Bestseller</span>
+      {% else %}
+        <span></span>
+      {% endif %}
+      {% if product.total_stock > 0 %}
+        <span class="product-badge-stock">{{ product.total_stock }} in stock</span>
+      {% endif %}
+    </div>
+
+    {% if product.primary_image %}
+      <img src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" onload="this.parentElement.classList.remove('skeleton')">
+    {% else %}
+      <img src="{% static product.category.placeholder %}" alt="{{ product.name }}" onload="this.parentElement.classList.remove('skeleton')">
+    {% endif %}
+
+    <span class="product-quick-cta">
+      <span>Customize &amp; Order</span>
+      <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    </span>
+  </a>
+
+  <div class="product-body">
+    <div class="product-cat">{{ product.category.name }}</div>
+    <h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
+    {% if product.short_description %}
+      <p class="product-desc">{{ product.short_description }}</p>
+    {% endif %}
+    <div class="product-footer">
+      <div>
+        <span class="price-sub">From</span>
+        <p class="price">{{ product.from_price|peso }}</p>
+      </div>
+      <div class="card-swatches" aria-label="Preview colors">
+        {% for swatch in product.color_swatches|slice:":5" %}
+          <button type="button" class="card-swatch-btn" style="background: {{ swatch.hex }}" data-hex="{{ swatch.hex }}" title="Preview {{ swatch.name }}" aria-label="Preview {{ swatch.name }}"></button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</article>

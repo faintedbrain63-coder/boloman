@@ -1,0 +1,61 @@
+{% extends "dashboard/base.html" %}
+{% load shop %}
+{% block heading %}Stock Movement Ledger{% endblock %}
+{% block subheading %}<div class="small text-muted">Immutable audit trail of every Stock In, Sale, Return, Adjustment, and Cancellation</div>{% endblock %}
+{% block content %}
+<div class="filter-bar mb-3">
+  <form class="row g-2 align-items-end" method="get">
+    <div class="col-md-4">
+      <label class="form-label" for="q">Search SKU / Order / Note</label>
+      <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="SKU, order #, or reason…">
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label" for="type">Movement Type</label>
+      <select class="form-select" id="type" name="type">
+        <option value="">All types</option>
+        {% for value, label in types %}<option value="{{ value }}" {% if movement_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label" for="category">Category</label>
+      <select class="form-select" id="category" name="category">
+        <option value="">All categories</option>
+        {% for category in categories %}<option value="{{ category.slug }}" {% if category.slug == category_slug %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-1">
+      <button class="btn btn-teal flex-grow-1" type="submit">Filter</button>
+      {% if query or movement_type or category_slug %}
+        <a class="btn btn-soft" href="{% url 'dashboard:movements' %}" title="Clear filters"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="panel overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Timestamp</th><th>SKU</th><th>Type</th><th>Delta</th><th>Before → After</th><th>Reference</th><th>User</th><th>Reason / Notes</th></tr>
+      </thead>
+      <tbody>
+        {% for movement in page %}
+          <tr>
+            <td class="small text-muted">{{ movement.created_at|date:"M j, Y · g:i A" }}</td>
+            <td><span class="sku-code">{{ movement.variant.sku }}</span></td>
+            <td><span class="status-badge {{ movement.movement_type|movement_badge_class }}">{{ movement.get_movement_type_display }}</span></td>
+            <td class="fw-bold {% if movement.quantity > 0 %}text-success{% else %}text-danger{% endif %}">{{ movement.quantity|stringformat:"+d" }}</td>
+            <td class="small">{{ movement.balance_before }} → <strong>{{ movement.balance_after }}</strong></td>
+            <td>{% if movement.order %}<a class="fw-semibold" href="{% url 'dashboard:order_detail' movement.order.number %}">{{ movement.order.number }}</a>{% else %}—{% endif %}</td>
+            <td class="small text-muted">{{ movement.user|default:"seed/system" }}</td>
+            <td class="small">{{ movement.notes }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No stock movements match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

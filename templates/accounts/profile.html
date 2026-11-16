@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}My Profile · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow" style="color: #5eead4;"><i class="bi bi-person-badge" aria-hidden="true"></i> Customer Account</span>
+    <h1 class="h2 fw-bold mb-1">Delivery &amp; Contact Profile</h1>
+    <p class="small mb-0">Signed in as <strong class="text-white">{{ user.email }}</strong> · Pre-fills automatically at checkout.</p>
+  </div>
+</section>
+
+<div class="container py-4 py-lg-5" style="max-width: 760px;">
+  <div class="panel p-4 p-lg-5">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "partials/form_fields.html" %}
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-accent" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Save Profile</button>
+        <a class="btn btn-soft" href="{% url 'orders:list' %}">My Orders</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

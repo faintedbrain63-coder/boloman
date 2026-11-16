@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{% if current_category %}{{ current_category.name }} · {% endif %}Catalog · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <nav aria-label="Breadcrumb">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        {% if current_category %}
+          <li class="breadcrumb-item"><a href="{% url 'store:product_list' %}">Catalog</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ current_category.name }}</li>
+        {% else %}
+          <li class="breadcrumb-item active" aria-current="page">Catalog</li>
+        {% endif %}
+      </ol>
+    </nav>
+
+    <div class="row align-items-end g-4">
+      <div class="col-lg-7">
+        <h1 class="display-6 fw-bold mb-2">{{ current_category.name|default:"Custom Print & Merch Catalog" }}</h1>
+        <p class="mb-0">
+          {% if current_category %}
+            {{ current_category.description }}
+          {% else %}
+            Select any blank to preview colors, inspect real-time warehouse stock per size, and attach your custom print instructions.
+          {% endif %}
+        </p>
+      </div>
+      <div class="col-lg-5">
+        <form method="get" role="search" data-spinner="off">
+          {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
+          {% if sort != "newest" %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+          {% if in_stock %}<input type="hidden" name="in_stock" value="1">{% endif %}
+          <div class="input-group input-group-lg shadow-sm">
+            <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-search text-muted" aria-hidden="true"></i></span>
+            <input class="form-control border-0 ps-1" id="q" type="search" name="q" value="{{ query }}" placeholder="Search shirts, jerseys, mugs, tumblers, caps…">
+            <button class="btn btn-teal px-4" type="submit">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-4 py-lg-5">
+  <div class="row g-4 align-items-start">
+    <!-- Left Sticky Enterprise Filter Rail -->
+    <aside class="col-lg-3" aria-label="Catalog filters">
+      <div class="catalog-sidebar d-grid gap-3">
+        <div class="panel p-3">
+          <div class="d-flex justify-content-between align-items-center px-2 mb-2">
+            <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.08em; font-size: 0.72rem;">Product Lines</span>
+            {% if current_category or query or in_stock or sort != "newest" %}
+              <a class="small fw-semibold" href="{% url 'store:product_list' %}">Reset</a>
+            {% endif %}
+          </div>
+
+          <nav class="d-grid gap-1" aria-label="Categories">
+            <a class="filter-nav-link {% if not current_category %}is-active{% endif %}" href="?{% querystring category='' page=1 %}">
+              <span><i class="bi bi-grid me-2" aria-hidden="true"></i>All Blanks</span>
+              <span class="count">{{ total_catalog_count }}</span>
+            </a>
+            {% for category in categories %}
+              <a class="filter-nav-link {% if current_category.slug == category.slug %}is-active{% endif %}" href="?{% querystring category=category.slug page=1 %}">
+                <span><i class="bi {{ category.icon }} me-2" aria-hidden="true"></i>{{ category.name }}</span>
+                <span class="count">{{ category.item_count }}</span>
+              </a>
+            {% endfor %}
+          </nav>
+        </div>
+
+        <form class="panel p-3" method="get" data-spinner="off">
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+          {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
+
+          <label class="small fw-bold text-uppercase text-muted d-block mb-2" style="letter-spacing: 0.08em; font-size: 0.72rem;" for="sort">Sort Order</label>
+          <select class="form-select form-select-sm mb-3" id="sort" name="sort" onchange="this.form.submit()">
+            {% for value, label in sorts.items %}
+              <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch" id="inStockSwitch" name="in_stock" value="1" {% if in_stock %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small fw-semibold" for="inStockSwitch">In-stock ready only</label>
+          </div>
+        </form>
+
+        <div class="panel p-3 d-none d-lg-block" style="background: linear-gradient(145deg, #0f172a 0%, #134e4a 100%); color: #f8fafc;">
+          <div class="small fw-bold text-uppercase mb-1" style="color: #5eead4; font-size: 0.7rem; letter-spacing: 0.08em;">Need a Team Quote?</div>
+          <p class="small mb-3" style="color: #cbd5e1;">Ordering 30+ pieces with mixed roster names &amp; sizes? Our studio desk handles bulk proofs.</p>
+          <a class="btn btn-sm btn-light w-100 fw-bold" href="{% url 'home' %}#contact">Contact Production Desk →</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Product Grid -->
+    <div class="col-lg-9">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <strong class="small">{{ page.paginator.count }} product{{ page.paginator.count|pluralize }}</strong>
+          {% if current_category %}
+            <span class="status-badge badge-info">{{ current_category.name }}</span>
+          {% endif %}
+          {% if query %}
+            <span class="status-badge badge-neutral">“{{ query }}”</span>
+          {% endif %}
+          {% if in_stock %}
+            <span class="status-badge badge-in">In stock</span>
+          {% endif %}
+        </div>
+        <span class="small text-muted">Click color dots on any card to preview shade</span>
+      </div>
+
+      {% if page.object_list %}
+        <div class="row g-3 g-md-4">
+          {% for product in page %}
+            <div class="col-6 col-md-4">{% include "partials/product_card.html" %}</div>
+          {% endfor %}
+        </div>
+        {% include "partials/pagination.html" %}
+      {% else %}
+        {% include "partials/empty.html" with title="No matching products found" body="Try clearing your search term or switching back to All Blanks." %}
+        <div class="text-center mt-3">
+          <a class="btn btn-teal" href="{% url 'store:product_list' %}">View All {{ total_catalog_count }} Blanks</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

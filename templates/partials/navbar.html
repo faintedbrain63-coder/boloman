@@ -1,0 +1,88 @@
+{% load static %}
+<header class="site-header">
+  <nav class="navbar navbar-expand-md" aria-label="Primary navigation">
+    <div class="container">
+      <a class="brand" href="{% url 'home' %}">
+        <img src="{% static 'img/mark.svg' %}" alt="">
+        <span>
+          {{ site_settings.business_name }}
+          <span class="brand-sub">Custom Print Studio</span>
+        </span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav mx-md-auto align-items-md-center nav-pill-group gap-1 mt-3 mt-md-0">
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == '/' %}is-active{% endif %}" href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path|slice:':10' == '/products/' %}is-active{% endif %}" href="{% url 'store:product_list' %}">Catalog</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="catMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Categories
+            </a>
+            <div class="dropdown-menu mega-menu" aria-labelledby="catMenu">
+              <div class="d-flex justify-content-between align-items-center px-2 pb-2 mb-2 border-bottom">
+                <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.08em; font-size: 0.7rem;">6 Print-Ready Product Lines</span>
+                <a class="small fw-bold" href="{% url 'store:product_list' %}">View all →</a>
+              </div>
+              <div class="mega-grid">
+                {% for category in nav_categories %}
+                  <a class="mega-item" href="{{ category.get_absolute_url }}">
+                    <div class="mega-icon"><i class="bi {{ category.icon }}" aria-hidden="true"></i></div>
+                    <div>
+                      <strong>{{ category.name }}</strong>
+                      <span>{{ category.description|truncatechars:56 }}</span>
+                    </div>
+                  </a>
+                {% empty %}
+                  <span class="dropdown-item-text">Categories coming soon</span>
+                {% endfor %}
+              </div>
+            </div>
+          </li>
+          <li class="nav-item d-none d-lg-block"><a class="nav-link" href="{% url 'home' %}#how-it-works">Process</a></li>
+          <li class="nav-item d-none d-lg-block"><a class="nav-link" href="{% url 'home' %}#contact">Contact</a></li>
+        </ul>
+
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mt-md-0">
+          <button type="button" class="nav-search-trigger" data-bs-toggle="modal" data-bs-target="#quickSearchModal" aria-label="Search catalog">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span class="d-none d-xl-inline">Search…</span>
+            <span class="nav-kbd">/</span>
+          </button>
+
+          <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Switch Light / Obsidian Dark theme" aria-label="Switch theme">
+            <i class="bi bi-moon-stars" id="theme-icon" aria-hidden="true"></i>
+          </button>
+
+          {% if user.is_authenticated %}
+            <a class="btn btn-soft btn-sm" href="{% url 'orders:list' %}">
+              <i class="bi bi-box-seam" aria-hidden="true"></i> Orders
+            </a>
+            <a class="btn btn-soft btn-sm" href="{% url 'accounts:profile' %}" aria-label="Profile">
+              <i class="bi bi-person" aria-hidden="true"></i><span class="d-none d-xl-inline"> Profile</span>
+            </a>
+            {% if user.is_staff %}
+              <a class="btn btn-teal btn-sm" href="{% url 'dashboard:overview' %}">
+                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i> Console
+              </a>
+            {% endif %}
+            <form method="post" action="{% url 'account_logout' %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-link text-muted text-decoration-none px-1" type="submit">Out</button>
+            </form>
+          {% else %}
+            <a class="btn btn-soft btn-sm" href="{% url 'account_login' %}">Log in</a>
+            <a class="btn btn-accent btn-sm" href="{% url 'account_signup' %}">Sign up</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

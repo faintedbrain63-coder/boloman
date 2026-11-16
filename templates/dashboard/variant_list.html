@@ -1,0 +1,42 @@
+{% extends "dashboard/base.html" %}
+{% load shop %}
+{% block heading %}{{ product.name }} · Variants{% endblock %}
+{% block subheading %}<div class="small text-muted"><a href="{% url 'dashboard:product_edit' product.pk %}">← Back to product details</a> · {{ product.category.name }}</div>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-accent" href="{% url 'dashboard:variant_new' product.pk %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Single Variant</a>
+  <a class="btn btn-teal" href="{% url 'dashboard:variant_generate' product.pk %}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Generate Color × Size Matrix</a>
+</div>
+
+<div class="panel overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>SKU</th><th>Option</th><th>On Hand</th><th>Reorder</th><th>Selling Price</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for variant in variants %}
+          <tr>
+            <td><a class="sku-code" href="{% url 'dashboard:variant_edit' variant.pk %}">{{ variant.sku }}</a></td>
+            <td><span class="swatch-dot me-1" style="background: {{ variant.color_hex }}"></span>{{ variant.option_label }}</td>
+            <td class="fw-bold">{{ variant.quantity_on_hand }}</td>
+            <td class="text-muted">{{ variant.reorder_level }}</td>
+            <td class="fw-semibold">{{ variant.price|peso }}</td>
+            <td><span class="status-badge badge-{{ variant.stock_status }}">{{ variant.stock_label }}</span></td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1">
+                <a class="btn btn-soft btn-sm" href="{% url 'dashboard:stock_in' %}?variant={{ variant.id }}">Stock In</a>
+                <a class="btn btn-soft btn-sm" href="{% url 'dashboard:variant_edit' variant.pk %}">Edit</a>
+                <form method="post" action="{% url 'dashboard:variant_delete' variant.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete variant {{ variant.sku }}?">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No variants yet. Use Generate Color × Size Matrix to create SKUs in bulk.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

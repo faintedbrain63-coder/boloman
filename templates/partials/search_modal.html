@@ -1,0 +1,26 @@
+<div class="modal fade" id="quickSearchModal" tabindex="-1" aria-labelledby="quickSearchLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+      <div class="modal-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0" id="quickSearchLabel"><i class="bi bi-search text-teal me-2" aria-hidden="true"></i>Search Custom Catalog</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="get" action="{% url 'store:product_list' %}" data-spinner="off">
+          <div class="input-group input-group-lg mb-3">
+            <input id="quick-search-input" type="search" name="q" class="form-control" placeholder="Search cotton tee, sublimation jersey, mug, tumbler, cap…">
+            <button class="btn btn-teal" type="submit">Search</button>
+          </div>
+        </form>
+        <div class="small text-muted fw-semibold mb-2">Jump to category</div>
+        <div class="chip-row">
+          {% for category in nav_categories %}
+            <a class="chip" href="{{ category.get_absolute_url }}">
+              <i class="bi {{ category.icon }} me-1" aria-hidden="true"></i>{{ category.name }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% block title %}Create Account · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="auth-split row g-0">
+    <div class="col-lg-5 auth-showcase">
+      <div>
+        <span class="eyebrow" style="color: #5eead4;"><i class="bi bi-stars" aria-hidden="true"></i> Join {{ site_settings.business_name }}</span>
+        <h2 class="h3 fw-bold mt-2 mb-3">Custom shirts, drinkware &amp; caps — built to your exact spec.</h2>
+        <p class="small" style="color: #cbd5e1;">Create a free customer account in seconds to place personalized orders and monitor studio production.</p>
+      </div>
+
+      <div class="d-grid gap-2 my-4">
+        <div class="auth-feature-item">
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          <div class="small"><strong class="d-block text-white">No Minimum Order</strong>Order 1 custom gift or 200 team jerseys.</div>
+        </div>
+        <div class="auth-feature-item">
+          <i class="bi bi-wallet2" aria-hidden="true"></i>
+          <div class="small"><strong class="d-block text-white">Flexible Checkout</strong>Pay via Cash on Delivery or verified GCash.</div>
+        </div>
+      </div>
+
+      <div class="small" style="color: #94a3b8;">Already have an account? Sign in anytime.</div>
+    </div>
+
+    <div class="col-lg-7 p-4 p-md-5 auth-form-pane">
+      <div class="mx-auto" style="max-width: 400px;">
+        <span class="eyebrow"><i class="bi bi-person-plus" aria-hidden="true"></i> Quick Registration</span>
+        <h1 class="h3 fw-bold mb-1">Create your account</h1>
+        <p class="text-muted small mb-4">Get instant access to custom ordering and live status tracking.</p>
+
+        <a class="btn btn-google" href="{% provider_login_url 'google' process='login' %}">
+          <i class="bi bi-google text-danger" aria-hidden="true"></i> Continue with Google
+        </a>
+
+        <div class="divider-text">or register with email</div>
+
+        <form method="post" action="{% url 'account_signup' %}" novalidate>
+          {% csrf_token %}
+          {{ redirect_field }}
+          {% include "partials/form_fields.html" %}
+          <button class="btn btn-accent btn-lg w-100 mt-2" type="submit">Create Account</button>
+        </form>
+
+        <p class="text-center small text-muted mb-0 mt-4">
+          Already registered? <a class="fw-bold" href="{{ login_url }}">Sign in instead →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

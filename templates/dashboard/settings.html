@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}Site &amp; GCash Settings{% endblock %}
+{% block subheading %}<div class="small text-muted">Update public contact details, workshop address, map embed, and GCash account info</div>{% endblock %}
+{% block content %}
+<div class="panel p-4 p-lg-5" style="max-width: 760px;">
+  <p class="text-muted small mb-4">Changes here update the storefront header, footer, contact section, and checkout GCash instructions immediately.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button class="btn btn-accent" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Save Site Settings</button>
+  </form>
+</div>
+{% endblock %}

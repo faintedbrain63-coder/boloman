@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}{% if variant %}Edit {{ variant.sku }}{% else %}New Variant · {{ product.name }}{% endif %}{% endblock %}
+{% block subheading %}<div class="small text-muted"><a href="{% url 'dashboard:variants' product.pk %}">← Back to {{ product.name }} variants</a></div>{% endblock %}
+{% block content %}
+<div class="panel p-4 p-lg-5" style="max-width: 760px;">
+  {% if variant %}
+    <div class="d-flex justify-content-between align-items-center p-3 rounded bg-light border mb-4">
+      <div>
+        <div class="small text-muted">Current On-Hand Balance</div>
+        <strong class="fs-4">{{ variant.quantity_on_hand }} units</strong>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-teal btn-sm" href="{% url 'dashboard:stock_in' %}?variant={{ variant.id }}">Stock In</a>
+        <a class="btn btn-soft btn-sm" href="{% url 'dashboard:stock_adjust' %}?variant={{ variant.id }}">Adjust</a>
+      </div>
+    </div>
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-accent" type="submit">Save Variant</button>
+      <a class="btn btn-soft" href="{% url 'dashboard:variants' product.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

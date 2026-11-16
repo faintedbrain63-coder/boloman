@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Staff only · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+  <div class="container py-5">
+    {% include "partials/empty.html" with title="Staff only" body="That page is for the shop team. Log in with a staff account if you have one." %}
+  </div>
+{% endblock %}

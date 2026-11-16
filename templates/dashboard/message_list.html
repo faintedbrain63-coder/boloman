@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}Customer Inquiries{% endblock %}
+{% block subheading %}<div class="small text-muted">Quote requests and messages submitted through the landing page contact form</div>{% endblock %}
+{% block content %}
+<div class="chip-row mb-3">
+  <a class="chip {% if not state %}is-active{% endif %}" href="{% url 'dashboard:messages' %}">All Messages</a>
+  <a class="chip {% if state == 'unread' %}is-active{% endif %}" href="?state=unread">Unread</a>
+  <a class="chip {% if state == 'read' %}is-active{% endif %}" href="?state=read">Read</a>
+</div>
+
+<div class="d-grid gap-2">
+  {% for message in page %}
+    <article class="panel p-4">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <div>
+          <h2 class="h6 fw-bold mb-1">
+            {{ message.subject }}
+            {% if not message.is_read %}<span class="status-badge badge-low ms-1">Unread</span>{% endif %}
+          </h2>
+          <div class="small text-muted">
+            From <strong class="text-dark">{{ message.name }}</strong> · <a href="mailto:{{ message.email }}">{{ message.email }}</a>
+            {% if message.phone %} · {{ message.phone }}{% endif %}
+            · {{ message.created_at|date:"M j, Y · g:i A" }}
+          </div>
+        </div>
+        <form method="post" action="{% url 'dashboard:message_toggle' message.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-soft btn-sm" type="submit">{% if message.is_read %}Mark Unread{% else %}Mark Read{% endif %}</button>
+        </form>
+      </div>
+      <div class="p-3 rounded bg-light border small mt-2">{{ message.message|linebreaksbr }}</div>
+    </article>
+  {% empty %}
+    {% include "partials/empty.html" with title="No inquiries found" body="Quote requests from the storefront contact form appear here." %}
+  {% endfor %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

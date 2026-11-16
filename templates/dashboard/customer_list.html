@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}Customers{% endblock %}
+{% block subheading %}<div class="small text-muted">Registered shoppers, delivery addresses, and lifetime order counts</div>{% endblock %}
+{% block content %}
+<form class="d-flex gap-2 mb-3" method="get">
+  <label class="visually-hidden" for="q">Search customers</label>
+  <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="Search name or email…" style="max-width: 320px;">
+  <button class="btn btn-teal" type="submit">Search</button>
+</form>
+
+<div class="panel overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Saved Address</th><th>Orders</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for customer in page %}
+          <tr>
+            <td>
+              <span class="fw-semibold">{{ customer.get_full_name|default:customer.username }}</span>
+              {% if customer.is_staff %}<span class="status-badge badge-info ms-1">Staff</span>{% endif %}
+            </td>
+            <td class="small">{{ customer.email }}</td>
+            <td class="small">{{ customer.profile.phone|default:"—" }}</td>
+            <td class="small text-muted">{{ customer.profile.full_address|default:"—" }}</td>
+            <td class="fw-bold">{{ customer.order_count }}</td>
+            <td class="small text-muted">{{ customer.date_joined|date:"M j, Y" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No customers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

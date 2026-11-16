@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load static shop %}
+{% block title %}{{ product.name }} · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<div class="container py-4 py-lg-5">
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumb small mb-4">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'store:product_list' %}">Catalog</a></li>
+      <li class="breadcrumb-item"><a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4 g-xl-5 align-items-start">
+    <!-- Left: Interactive Studio Gallery & Production Spec Accordion -->
+    <div class="col-lg-6">
+      <div class="gallery-sticky">
+        <div class="gallery-main skeleton" id="gallery-main">
+          {% if product.primary_image %}
+            <img id="main-photo" src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" onload="this.parentElement.classList.remove('skeleton')">
+          {% else %}
+            <img id="main-photo" src="{% static product.category.placeholder %}" alt="{{ product.name }}" onload="this.parentElement.classList.remove('skeleton')">
+          {% endif %}
+          <div class="gallery-overlay-pill" id="stage-live-pill">
+            <span class="swatch-dot" style="background: #0d9488;"></span>
+            <span>{{ product.category.code }} Studio Preview</span>
+          </div>
+        </div>
+
+        {% if product.images.all|length > 1 %}
+          <div class="gallery-thumbs">
+            {% for image in product.images.all %}
+              <button type="button" class="thumb {% if forloop.first %}is-active{% endif %}" data-src="{{ image.image.url }}" aria-label="Show photo {{ forloop.counter }} of {{ product.name }}">
+                <img src="{{ image.image.url }}" alt="">
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Clear Spec & Fulfillment Accordion -->
+        <div class="accordion mt-3 panel overflow-hidden" id="specAccordion">
+          <div class="accordion-item border-0 border-bottom">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-white fw-bold small py-3" type="button" data-bs-toggle="collapse" data-bs-target="#specPrint" aria-expanded="true">
+                <i class="bi bi-layers text-teal me-2" aria-hidden="true"></i> Print Method &amp; Material Details
+              </button>
+            </h2>
+            <div id="specPrint" class="accordion-collapse collapse show" data-bs-parent="#specAccordion">
+              <div class="accordion-body small text-muted pt-0">
+                {{ product.description|linebreaksbr }}
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-white fw-bold small py-3" type="button" data-bs-toggle="collapse" data-bs-target="#specTurnaround" aria-expanded="false">
+                <i class="bi bi-truck text-teal me-2" aria-hidden="true"></i> Stock Reservation, Payment &amp; Turnaround
+              </button>
+            </h2>
+            <div id="specTurnaround" class="accordion-collapse collapse" data-bs-parent="#specAccordion">
+              <div class="accordion-body small text-muted pt-0">
+                Your selected color and size SKU is reserved immediately upon checkout. Standard custom print turnaround is <strong>3–5 business days</strong>. Pay via <strong>Cash on Delivery</strong> or <strong>GCash</strong>, and monitor all 5 fulfillment stages from your My Orders portal.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Guided 4-Step Product Configurator -->
+    <div class="col-lg-6">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="eyebrow eyebrow-pill mb-0"><i class="bi {{ product.category.icon }}" aria-hidden="true"></i> {{ product.category.name }}</span>
+        <span class="status-badge badge-neutral font-mono">{{ product.category.code }} SERIES</span>
+      </div>
+
+      <h1 class="display-6 fw-bold mb-2">{{ product.name }}</h1>
+      {% if product.short_description %}
+        <p class="text-muted mb-3">{{ product.short_description }}</p>
+      {% endif %}
+
+      <div class="d-flex flex-wrap align-items-baseline gap-2 mb-4">
+        <span class="fs-2 fw-bold font-mono text-dark" id="price">{{ product.from_price|peso }}</span>
+        <span class="small text-muted">per piece · includes custom print setup</span>
+      </div>
+
+      {% if variants %}
+        {{ variant_payload|json_script:"variant-data" }}
+        <form method="get" action="{% url 'orders:checkout' %}" id="order-form" class="config-card">
+          <input type="hidden" name="variant" id="variant-id" value="{{ variants.0.id }}">
+
+          <!-- Live Warehouse Stock Meter -->
+          <div class="stock-meter-wrap">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <span class="small fw-bold text-dark"><i class="bi bi-box-seam me-1 text-muted" aria-hidden="true"></i> Selected SKU Availability</span>
+              <span id="stock-status" class="stock-banner is-in" aria-live="polite"></span>
+            </div>
+            <div class="stock-meter-track" aria-hidden="true">
+              <div class="stock-meter-bar" id="stock-meter-bar" style="width: 75%;"></div>
+            </div>
+          </div>
+
+          <div class="config-step">
+            <div class="step-label">
+              <span><span class="step-pill">1</span>Select Colorway</span>
+              <span id="color-stock" class="small text-muted fw-normal" aria-live="polite"></span>
+            </div>
+            <div id="color-options" class="swatches" role="radiogroup" aria-label="Color"></div>
+          </div>
+
+          <div class="config-step" id="size-block">
+            <div class="step-label">
+              <span><span class="step-pill">2</span><span id="size-legend">Select Size</span></span>
+              <span class="small text-muted fw-normal">Unit count shown per option</span>
+            </div>
+            <div id="size-options" class="size-options" role="radiogroup" aria-label="Size or capacity"></div>
+          </div>
+
+          <div class="config-step">
+            <div class="step-label">
+              <label class="mb-0" for="qty"><span class="step-pill">3</span>Order Quantity</label>
+              <span class="small text-muted fw-normal">Auto-capped at available stock</span>
+            </div>
+            <div class="qty-stepper">
+              <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
+              <input id="qty" name="qty" type="number" min="1" value="1" inputmode="numeric">
+              <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div class="config-step">
+            <div class="step-label">
+              <label class="mb-0" for="notes"><span class="step-pill">4</span>Personalization / Print Instructions <span class="text-muted fw-normal">(optional)</span></label>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+              <button type="button" class="note-preset" data-note-preset="Back print: NAME #07 (White ink), Front left-chest logo">+ Roster Name &amp; Number</button>
+              <button type="button" class="note-preset" data-note-preset="Front left-chest company logo (3.5 in wide)">+ Left Chest Logo</button>
+              <button type="button" class="note-preset" data-note-preset="Full-wrap custom graphic — match brand teal &amp; white">+ Full Wrap Print</button>
+              <button type="button" class="note-preset" data-note-preset="Plain blank — no custom print needed">+ Plain Blank</button>
+            </div>
+            <textarea class="form-control" id="notes" name="notes" rows="3" maxlength="500" placeholder="Click a preset above or describe exact text, jersey number, ink/thread color, and placement…"></textarea>
+          </div>
+
+          <div class="order-summary-dock">
+            <div>
+              <div class="small" style="color: #94a3b8;">Configuration Summary</div>
+              <strong id="selected-summary" class="small text-white">—</strong>
+            </div>
+            <div class="text-end">
+              <div class="small" style="color: #94a3b8;">Estimated Total</div>
+              <span class="total-val" id="estimated-total">{{ product.from_price|peso }}</span>
+            </div>
+          </div>
+
+          <button class="btn btn-accent btn-lg w-100" id="order-btn" type="submit">
+            <i class="bi bi-bag-check-fill" aria-hidden="true"></i> Order Now — Continue to Checkout
+          </button>
+
+          {% if not user.is_authenticated %}
+            <p class="form-text text-center mb-0 mt-2">
+              <i class="bi bi-shield-lock" aria-hidden="true"></i> Sign-in required to reserve stock. You'll return straight to checkout after signing in.
+            </p>
+          {% endif %}
+        </form>
+
+        <noscript>
+          <form class="config-card mt-3" method="get" action="{% url 'orders:checkout' %}">
+            <label class="form-label" for="variant-fallback">Choose available option</label>
+            <select class="form-select mb-3" id="variant-fallback" name="variant">
+              {% for variant in variants %}
+                <option value="{{ variant.id }}" {% if variant.quantity_on_hand == 0 %}disabled{% endif %}>
+                  {{ variant.option_label }} — {{ variant.price|peso }} ({% if variant.quantity_on_hand == 0 %}Out of stock{% else %}{{ variant.quantity_on_hand }} in stock{% endif %})
+                </option>
+              {% endfor %}
+            </select>
+            <label class="form-label" for="qty-fallback">Quantity</label>
+            <input class="form-control mb-3" style="max-width: 120px;" id="qty-fallback" name="qty" type="number" min="1" value="1">
+            <button class="btn btn-accent w-100" type="submit">Order Now</button>
+          </form>
+        </noscript>
+      {% else %}
+        {% include "partials/empty.html" with title="Variants coming soon" body="This product has no active color or size options in stock right now." %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if related %}
+    <section class="mt-5 pt-4 border-top">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">More in {{ product.category.name }}</h2>
+        <a class="btn btn-soft btn-sm" href="{{ product.category.get_absolute_url }}">View all {{ product.category.name }} →</a>
+      </div>
+      <div class="row g-3 g-md-4">
+        {% for product in related %}
+          <div class="col-6 col-lg-3">{% include "partials/product_card.html" %}</div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/product-detail.js' %}?v=7"></script>{% endblock %}

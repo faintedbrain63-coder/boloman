@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}Categories{% endblock %}
+{% block subheading %}<div class="small text-muted">Configure the six storefront categories, SKU prefixes, and variant sizing rules</div>{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+  <a class="btn btn-accent" href="{% url 'dashboard:category_new' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Category</a>
+</div>
+
+<div class="panel overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Category</th><th>SKU Code</th><th>Variant Sizing Rule</th><th>Display Order</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for category in categories %}
+          <tr>
+            <td>
+              <a class="fw-bold" href="{% url 'dashboard:category_edit' category.pk %}">
+                <i class="bi {{ category.icon }} text-muted me-2" aria-hidden="true"></i>{{ category.name }}
+              </a>
+            </td>
+            <td><span class="sku-code">{{ category.code }}</span></td>
+            <td class="small">{{ category.get_variant_type_display }}</td>
+            <td>{{ category.display_order }}</td>
+            <td>
+              {% if category.is_active %}<span class="status-badge badge-in">Active</span>{% else %}<span class="status-badge badge-neutral">Hidden</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1">
+                <a class="btn btn-soft btn-sm" href="{% url 'dashboard:category_edit' category.pk %}">Edit</a>
+                <form method="post" action="{% url 'dashboard:category_delete' category.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete category {{ category.name }}?">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No categories configured.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

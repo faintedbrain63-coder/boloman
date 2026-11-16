@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block heading %}{% if category %}Edit {{ category.name }}{% else %}New Category{% endif %}{% endblock %}
+{% block subheading %}<div class="small text-muted"><a href="{% url 'dashboard:categories' %}">← Back to categories</a></div>{% endblock %}
+{% block content %}
+<div class="panel p-4 p-lg-5" style="max-width: 720px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-accent" type="submit">Save Category</button>
+      <a class="btn btn-soft" href="{% url 'dashboard:categories' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

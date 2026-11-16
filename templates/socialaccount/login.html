@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}Continue with {{ provider.name }} · {{ site_settings.business_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      {% if process == "connect" %}
+        <h1 class="h3">Connect {{ provider.name }}</h1>
+        <p>You're about to connect {{ provider.name }} to your Boloman account.</p>
+      {% else %}
+        <h1 class="h3">Continue with {{ provider.name }}</h1>
+        <p>You'll sign in with {{ provider.name }}, then come back to the shop.</p>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-accent" type="submit">Continue</button>
+        <a class="btn btn-outline-secondary" href="{% url 'account_login' %}">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

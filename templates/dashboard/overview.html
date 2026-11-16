@@ -1,0 +1,196 @@
+{% extends "dashboard/base.html" %}
+{% load humanize shop static %}
+{% block heading %}Operations Overview{% endblock %}
+{% block subheading %}<div class="small text-muted">Sales performance, order fulfillment queue, and warehouse stock health</div>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="panel kpi">
+      <div>
+        <span class="kpi-label">Total Revenue</span>
+        <strong data-counter="{{ sales_total|floatformat:0 }}" data-prefix="₱">₱0</strong>
+        <div class="kpi-sub">Excludes cancelled orders</div>
+      </div>
+      <div class="kpi-icon" style="background: var(--ok-bg); color: var(--ok);"><i class="bi bi-cash-stack" aria-hidden="true"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="panel kpi">
+      <div>
+        <span class="kpi-label">Total Orders</span>
+        <strong data-counter="{{ order_count }}">0</strong>
+        <div class="kpi-sub"><a href="{% url 'dashboard:orders' %}">Manage fulfillment →</a></div>
+      </div>
+      <div class="kpi-icon" style="background: var(--info-bg); color: var(--info);"><i class="bi bi-receipt" aria-hidden="true"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="panel kpi">
+      <div>
+        <span class="kpi-label">Customers</span>
+        <strong data-counter="{{ customer_count }}">0</strong>
+        <div class="kpi-sub"><a href="{% url 'dashboard:customers' %}">View accounts →</a></div>
+      </div>
+      <div class="kpi-icon" style="background: var(--brand-soft); color: var(--brand);"><i class="bi bi-people-fill" aria-hidden="true"></i></div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="panel kpi">
+      <div>
+        <span class="kpi-label">GCash Pending</span>
+        <strong data-counter="{{ pending_gcash }}">0</strong>
+        <div class="kpi-sub"><a href="{% url 'dashboard:orders' %}?method=GCASH">Verify receipts →</a></div>
+      </div>
+      <div class="kpi-icon" style="background: var(--warning-bg); color: var(--warning);"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Daily Revenue · Last 30 Days</h2>
+        <span class="small text-muted">PHP (₱)</span>
+      </div>
+      <div class="p-3"><canvas id="salesChart" height="115"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Orders by Stage</h2>
+      </div>
+      <div class="p-3"><canvas id="statusChart" height="185"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Top Selling Products</h2>
+        <a class="small fw-semibold" href="{% url 'dashboard:products' %}">Catalog</a>
+      </div>
+      <div class="p-3">
+        {% if top_products %}
+          <div class="d-grid gap-2">
+            {% for item in top_products %}
+              <div class="d-flex justify-content-between align-items-center py-1 {% if not forloop.last %}border-bottom{% endif %}">
+                <span class="fw-medium">{{ item.product_name }}</span>
+                <span class="small text-muted"><strong class="text-dark">{{ item.qty }}</strong> pcs · {{ item.revenue|peso }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">Sales rankings appear once orders are placed.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Sales by Category</h2>
+        <a class="small fw-semibold" href="{% url 'dashboard:categories' %}">Categories</a>
+      </div>
+      <div class="p-3">
+        {% if top_categories %}
+          <div class="d-grid gap-2">
+            {% for item in top_categories %}
+              <div class="d-flex justify-content-between align-items-center py-1 {% if not forloop.last %}border-bottom{% endif %}">
+                <span class="fw-medium">{{ item.name }}</span>
+                <span class="small text-muted"><strong class="text-dark">{{ item.qty }}</strong> pcs · {{ item.revenue|peso }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">Category breakdown appears once orders are placed.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Recent Orders</h2>
+        <a class="small fw-semibold" href="{% url 'dashboard:orders' %}">View all</a>
+      </div>
+      <div class="p-3">
+        {% for order in recent_orders %}
+          <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div>
+              <a class="fw-semibold d-block" href="{% url 'dashboard:order_detail' order.number %}">{{ order.number }}</a>
+              <span class="small text-muted">{{ order.recipient_name }} · {{ order.total|peso }}</span>
+            </div>
+            <span class="status-badge {{ order.status|order_badge_class }}">{{ order.status_label }}</span>
+          </div>
+        {% empty %}
+          <p class="text-muted small mb-0">No orders placed yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Low Stock Alerts</h2>
+        <a class="small fw-semibold" href="{% url 'dashboard:inventory' %}?status=low">Filter low</a>
+      </div>
+      <div class="p-3">
+        {% for variant in low_stock %}
+          <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div>
+              <span class="sku-code">{{ variant.sku }}</span>
+              <div class="small text-muted">{{ variant.product.name }} · {{ variant.option_label }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="status-badge badge-low">{{ variant.quantity_on_hand }} left</span>
+              <a class="btn btn-soft btn-sm" href="{% url 'dashboard:stock_in' %}?variant={{ variant.id }}">Restock</a>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted small mb-0">No variants are below reorder threshold.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="panel h-100">
+      <div class="panel-header">
+        <h2 class="panel-title">Out of Stock</h2>
+        <a class="small fw-semibold" href="{% url 'dashboard:inventory' %}?status=out">Filter out</a>
+      </div>
+      <div class="p-3">
+        {% for variant in out_of_stock %}
+          <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div>
+              <span class="sku-code">{{ variant.sku }}</span>
+              <div class="small text-muted">{{ variant.product.name }} · {{ variant.option_label }}</div>
+            </div>
+            <a class="btn btn-teal btn-sm" href="{% url 'dashboard:stock_in' %}?variant={{ variant.id }}">Stock In</a>
+          </div>
+        {% empty %}
+          <p class="text-muted small mb-0">Every active variant currently has stock.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_series|json_script:"chart-series" }}
+{{ status_labels|json_script:"status-labels" }}
+{{ status_counts|json_script:"status-counts" }}
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}?v=4"></script>
+{% endblock %}

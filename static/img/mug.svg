@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="Custom Ceramic Mug">
+  <defs>
+    <linearGradient id="studioMug" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="640" fill="url(#studioMug)"/>
+  <circle cx="310" cy="330" r="215" fill="#ffffff" opacity="0.8"/>
+  <ellipse cx="295" cy="500" rx="140" ry="18" fill="#cbd5e1"/>
+  <path d="M405 236h44c40 0 68 30 68 72s-28 72-68 72h-44" fill="none" stroke="#1e293b" stroke-width="30" stroke-linecap="round"/>
+  <rect x="165" y="176" width="256" height="304" rx="34" fill="#0f172a"/>
+  <ellipse cx="293" cy="176" rx="128" ry="22" fill="#334155"/>
+  <rect x="198" y="238" width="190" height="150" rx="16" fill="#0f766e"/>
+  <text x="293" y="308" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="24" fill="#ffffff" font-weight="800" letter-spacing="1.5">CUSTOM MUG</text>
+  <text x="293" y="338" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#99f6e4" font-weight="600">11oz · 15oz WRAP</text>
+</svg>
