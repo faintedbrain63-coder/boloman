@@ -6,25 +6,42 @@ from orders.models import Payment
 
 
 class CheckoutForm(BootstrapFormMixin, forms.Form):
-    recipient_name = forms.CharField(max_length=160, label="Recipient name")
-    phone = forms.CharField(max_length=40)
-    address_line = forms.CharField(max_length=255, label="Street address")
-    city = forms.CharField(max_length=80)
-    province = forms.CharField(max_length=80)
-    postal_code = forms.CharField(max_length=20, required=False)
-    quantity = forms.IntegerField(min_value=1)
+    recipient_name = forms.CharField(
+        max_length=160,
+        label="Recipient name",
+        widget=forms.TextInput(attrs={"placeholder": "Juan Dela Cruz"}),
+    )
+    phone = forms.CharField(max_length=40, widget=forms.TextInput(attrs={"placeholder": "09XX XXX XXXX"}))
+    address_line = forms.CharField(
+        max_length=255,
+        label="Street address",
+        widget=forms.TextInput(attrs={"placeholder": "123 Mabini Street"}),
+    )
+    city = forms.CharField(max_length=80, widget=forms.TextInput(attrs={"placeholder": "Quezon City"}))
+    province = forms.CharField(max_length=80, widget=forms.TextInput(attrs={"placeholder": "Metro Manila"}))
+    postal_code = forms.CharField(
+        max_length=20, required=False, widget=forms.TextInput(attrs={"placeholder": "1100"})
+    )
+    quantity = forms.IntegerField(min_value=1, widget=forms.NumberInput(attrs={"placeholder": "1"}))
     customization_notes = forms.CharField(
         required=False,
         label="Customization notes",
         help_text="Name and number to print, design notes, or anything we should know.",
-        widget=forms.Textarea(attrs={"rows": 3, "maxlength": 500}),
+        widget=forms.Textarea(
+            attrs={"rows": 3, "maxlength": 500, "placeholder": "Name, jersey number, and where to print"}
+        ),
     )
     payment_method = forms.ChoiceField(
         choices=Payment.METHODS,
         widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
         initial=Payment.COD,
     )
-    gcash_reference = forms.CharField(required=False, max_length=80, label="GCash reference number")
+    gcash_reference = forms.CharField(
+        required=False,
+        max_length=80,
+        label="GCash reference number",
+        widget=forms.TextInput(attrs={"placeholder": "Reference number on the receipt"}),
+    )
     screenshot = forms.ImageField(required=False, validators=[validate_image_file], label="Payment screenshot")
     save_profile = forms.BooleanField(required=False, initial=True, label="Save this as my delivery address")
 

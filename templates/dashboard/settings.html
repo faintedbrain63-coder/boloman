@@ -1,10 +1,16 @@
 {% extends "dashboard/base.html" %}
 {% block heading %}Site &amp; GCash Settings{% endblock %}
-{% block subheading %}<div class="small text-muted">Update public contact details, workshop address, map embed, and GCash account info</div>{% endblock %}
+{% block subheading %}<div class="small text-muted">Update public contact details, the workshop address, and the GCash account customers pay</div>{% endblock %}
 {% block content %}
 <div class="panel p-4 p-lg-5" style="max-width: 760px;">
-  <p class="text-muted small mb-4">Changes here update the storefront header, footer, contact section, and checkout GCash instructions immediately.</p>
-  <form method="post" novalidate>
+  <p class="text-muted small mb-4">Changes here update the storefront header, footer, contact section, and the GCash number and QR code at checkout.</p>
+  {% if form.instance.gcash_qr %}
+    <div class="gcash-qr mb-4">
+      <img src="{{ form.instance.gcash_qr.url }}" alt="Current GCash QR code for {{ form.instance.gcash_account_name }}">
+      <div class="small text-muted">Customers scan this QR when they choose GCash. Upload a new image to replace it.</div>
+    </div>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {% include "partials/form_fields.html" %}
     <button class="btn btn-accent" type="submit"><i class="bi bi-check2" aria-hidden="true"></i> Save Site Settings</button>

@@ -1,6 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% block heading %}Categories{% endblock %}
-{% block subheading %}<div class="small text-muted">Configure the six storefront categories, SKU prefixes, and variant sizing rules</div>{% endblock %}
+{% block subheading %}<div class="small text-muted">Configure storefront categories, SKU prefixes, and variant sizing rules</div>{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-end mb-3">
   <a class="btn btn-accent" href="{% url 'dashboard:category_new' %}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add Category</a>
@@ -29,7 +29,7 @@
                 <a class="btn btn-soft btn-sm" href="{% url 'dashboard:category_edit' category.pk %}">Edit</a>
                 <form method="post" action="{% url 'dashboard:category_delete' category.pk %}">
                   {% csrf_token %}
-                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete category {{ category.name }}?">Delete</button>
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="{{ category.name }} will be removed." data-confirm-title="Delete this category?" data-confirm-tone="danger" data-confirm-accept="Delete category" data-confirm-detail="Categories that still have products are kept.">Delete</button>
                 </form>
               </div>
             </td>

@@ -162,6 +162,7 @@ class Command(BaseCommand):
                 "name": name,
                 "short_description": short,
                 "description": description,
+                "cost_price": (price * Decimal("0.45")).quantize(Decimal("0.01")),
                 "base_price": price,
                 "is_featured": featured,
                 "is_active": True,

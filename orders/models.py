@@ -75,8 +75,15 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="order_items")
+    variant = models.ForeignKey(
+        ProductVariant,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+    )
     product_name = models.CharField(max_length=160)
+    category_name = models.CharField(max_length=80, blank=True, default="")
     color_name = models.CharField(max_length=40)
     color_hex = models.CharField(max_length=7, blank=True)
     size = models.CharField(max_length=10, blank=True)

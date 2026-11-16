@@ -11,7 +11,7 @@
 <div class="panel overflow-hidden">
   <div class="table-responsive">
     <table class="table align-middle">
-      <thead><tr><th>SKU</th><th>Option</th><th>On Hand</th><th>Reorder</th><th>Selling Price</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>SKU</th><th>Option</th><th>On Hand</th><th>Reorder</th><th>Cost</th><th>Selling Price</th><th>Status</th><th></th></tr></thead>
       <tbody>
         {% for variant in variants %}
           <tr>
@@ -19,6 +19,7 @@
             <td><span class="swatch-dot me-1" style="background: {{ variant.color_hex }}"></span>{{ variant.option_label }}</td>
             <td class="fw-bold">{{ variant.quantity_on_hand }}</td>
             <td class="text-muted">{{ variant.reorder_level }}</td>
+            <td>{{ variant.unit_cost|peso }}</td>
             <td class="fw-semibold">{{ variant.price|peso }}</td>
             <td><span class="status-badge badge-{{ variant.stock_status }}">{{ variant.stock_label }}</span></td>
             <td class="text-end">
@@ -27,13 +28,13 @@
                 <a class="btn btn-soft btn-sm" href="{% url 'dashboard:variant_edit' variant.pk %}">Edit</a>
                 <form method="post" action="{% url 'dashboard:variant_delete' variant.pk %}">
                   {% csrf_token %}
-                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete variant {{ variant.sku }}?">Delete</button>
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="SKU {{ variant.sku }} will be removed." data-confirm-title="Delete this variant?" data-confirm-tone="danger" data-confirm-accept="Delete variant" data-confirm-detail="Its stock ledger is removed with it. Past orders keep the printed summary.">Delete</button>
                 </form>
               </div>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="text-center text-muted py-4">No variants yet. Use Generate Color × Size Matrix to create SKUs in bulk.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">No variants yet. Use Generate Color × Size Matrix to create SKUs in bulk.</td></tr>
         {% endfor %}
       </tbody>
     </table>

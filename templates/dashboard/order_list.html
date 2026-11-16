@@ -7,7 +7,7 @@
   <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">All Orders</div><strong class="fs-4">{{ summary.total }}</strong></div></div>
   <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">New Orders</div><strong class="fs-4 text-primary">{{ summary.new }}</strong></div></div>
   <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">In Production / Transit</div><strong class="fs-4">{{ summary.active }}</strong></div></div>
-  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">Unverified GCash</div><strong class="fs-4 text-warning">{{ summary.unverified_gcash }}</strong></div></div>
+  <div class="col-6 col-lg-3"><div class="panel p-3"><div class="small text-muted">Unverified GCash</div><a class="fs-4 fw-bold text-warning" href="{% url 'dashboard:orders' %}?method=GCASH&verified=pending">{{ summary.unverified_gcash }}</a></div></div>
 </div>
 
 <div class="filter-bar mb-3">
@@ -30,8 +30,9 @@
         {% for value, label in methods %}<option value="{{ value }}" {% if filters.method == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
     </div>
-    <div class="col-6 col-md-2"><label class="form-label" for="start">From date</label><input class="form-control" id="start" type="date" name="start" value="{{ filters.start }}"></div>
-    <div class="col-6 col-md-2"><label class="form-label" for="end">To date</label><input class="form-control" id="end" type="date" name="end" value="{{ filters.end }}"></div>
+    <div class="col-6 col-md-2"><label class="form-label" for="start">From date</label><input class="form-control" id="start" type="date" name="start" value="{{ filters.start }}" placeholder="From date"></div>
+    <div class="col-6 col-md-2"><label class="form-label" for="end">To date</label><input class="form-control" id="end" type="date" name="end" value="{{ filters.end }}" placeholder="To date"></div>
+    {% if filters.verified %}<input type="hidden" name="verified" value="{{ filters.verified }}">{% endif %}
     <div class="col-md-1 d-flex gap-1">
       <button class="btn btn-teal w-100" type="submit">Go</button>
     </div>
@@ -65,7 +66,25 @@
             </td>
             <td class="fw-bold">{{ order.total|peso }}</td>
             <td class="small text-muted">{{ order.created_at|date:"M j, Y · g:i A" }}</td>
-            <td class="text-end"><a class="btn btn-soft btn-sm" href="{% url 'dashboard:order_detail' order.number %}">Manage</a></td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1">
+                {% if order.status != "CANCELLED" %}
+                  <form method="post" action="{% url 'dashboard:order_cancel' order.number %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}">
+                    {% csrf_token %}
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      type="submit"
+                      data-confirm="{{ order.number }} for {{ order.recipient_name }} will be cancelled."
+                      data-confirm-title="Cancel this order?"
+                      data-confirm-tone="danger"
+                      data-confirm-accept="Cancel order"
+                      data-confirm-detail="Reserved blanks return to stock. The customer can still see the cancelled order in their history."
+                    >Cancel</button>
+                  </form>
+                {% endif %}
+                <a class="btn btn-soft btn-sm" href="{% url 'dashboard:order_detail' order.number %}">Manage</a>
+              </div>
+            </td>
           </tr>
         {% empty %}
           <tr><td colspan="7" class="text-center text-muted py-4">No orders match these filters.</td></tr>

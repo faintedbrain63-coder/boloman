@@ -29,9 +29,9 @@
   <div class="product-body">
     <div class="product-cat">{{ product.category.name }}</div>
     <h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
-    {% if product.short_description %}
-      <p class="product-desc">{{ product.short_description }}</p>
-    {% endif %}
+    {% with blurb=product.short_description|default:product.description %}
+      {% if blurb %}<p class="product-desc">{{ blurb|truncatewords:18 }}</p>{% endif %}
+    {% endwith %}
     <div class="product-footer">
       <div>
         <span class="price-sub">From</span>

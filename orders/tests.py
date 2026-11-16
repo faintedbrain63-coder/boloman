@@ -51,7 +51,12 @@ class OrderFlowTests(TestCase):
         self.assertEqual(self.variant.quantity_on_hand, 1)
         self.assertNotEqual(first.number, second.number)
         self.assertTrue(first.number.startswith("ORD-"))
-        self.assertEqual(first.items.get().customization_notes, "Print Ana on the front")
+        item = first.items.get()
+        self.assertEqual(item.customization_notes, "Print Ana on the front")
+        self.assertEqual(item.category_name, "Mugs")
+        self.assertEqual(first.subtotal, item.line_total)
+        self.assertEqual(first.total, item.unit_price * item.quantity)
+        self.assertEqual(first.payment.amount, first.total)
         self.assertEqual(first.status_history.get().to_status, Order.NEW)
         self.assertTrue(StockMovement.objects.filter(order=first, movement_type=StockMovement.SALE).exists())
 

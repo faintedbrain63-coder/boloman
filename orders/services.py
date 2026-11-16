@@ -40,7 +40,7 @@ def place_order(
     with transaction.atomic():
         from inventory.models import ProductVariant
 
-        locked = ProductVariant.objects.select_for_update().select_related("product").get(pk=variant.pk)
+        locked = ProductVariant.objects.select_for_update().select_related("product__category").get(pk=variant.pk)
         if not locked.is_active or not locked.product.is_active:
             raise ProductVariant.DoesNotExist
         if locked.quantity_on_hand < quantity:
@@ -62,6 +62,7 @@ def place_order(
             order=order,
             variant=locked,
             product_name=locked.product.name,
+            category_name=locked.product.category.name,
             color_name=locked.color_name,
             color_hex=locked.color_hex,
             size=locked.size,
@@ -112,6 +113,8 @@ def set_order_status(order, new_status, user, note=""):
         items = list(order.items.select_related("variant"))
         if old != Order.CANCELLED and new_status == Order.CANCELLED:
             for item in items:
+                if item.variant_id is None:
+                    continue
                 move_stock(
                     variant=item.variant,
                     quantity=item.quantity,
@@ -121,6 +124,8 @@ def set_order_status(order, new_status, user, note=""):
                     notes=note or f"Cancelled {order.number}",
                 )
         elif old == Order.CANCELLED and new_status != Order.CANCELLED:
+            if any(item.variant_id is None for item in items):
+                raise InsufficientStock(available=0, requested=1)
             for item in items:
                 move_stock(
                     variant=item.variant,

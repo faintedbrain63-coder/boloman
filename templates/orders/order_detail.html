@@ -21,7 +21,7 @@
       {% if order.user_id == user.id and order.status == "NEW" %}
         <form method="post" action="{% url 'orders:cancel' order.number %}">
           {% csrf_token %}
-          <button class="btn btn-outline-light btn-sm" type="submit" data-confirm="Cancel {{ order.number }}? Your reserved blank stock will be restored immediately.">
+          <button class="btn btn-outline-light btn-sm" type="submit" data-confirm="Reserved stock for {{ order.number }} will be returned." data-confirm-title="Cancel this order?" data-confirm-tone="danger" data-confirm-accept="Cancel order" data-confirm-detail="You can only cancel while the order is still new.">
             <i class="bi bi-x-circle text-danger me-1" aria-hidden="true"></i> Cancel Order
           </button>
         </form>

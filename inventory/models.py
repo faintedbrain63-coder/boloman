@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -33,13 +34,23 @@ class ProductVariant(models.Model):
     sku = models.CharField(max_length=40, unique=True)
     quantity_on_hand = models.PositiveIntegerField(default=0)
     reorder_level = models.PositiveIntegerField(default=5)
-    cost_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    selling_price = models.DecimalField(
+    cost_price = models.DecimalField(
+        "Cost price",
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Leave blank to use the product's base price.",
+        validators=[MinValueValidator(0)],
+        help_text="Leave blank to use the product cost price.",
+    )
+    selling_price = models.DecimalField(
+        "Selling price",
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        help_text="Leave blank to use the product selling price.",
     )
     supplier = models.ForeignKey(Supplier, null=True, blank=True, on_delete=models.SET_NULL, related_name="variants")
     location = models.CharField("Location / bin", max_length=40, blank=True)
@@ -57,6 +68,12 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return f"{self.sku} · {self.product.name} · {self.option_label}"
+
+    @property
+    def unit_cost(self):
+        if self.cost_price is not None:
+            return self.cost_price
+        return self.product.cost_price
 
     @property
     def price(self):
@@ -104,7 +121,7 @@ class StockMovement(models.Model):
         (CANCELLATION, "Cancellation"),
     ]
 
-    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="movements")
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="movements")
     movement_type = models.CharField(max_length=20, choices=TYPES)
     quantity = models.IntegerField(help_text="Positive adds stock. Negative removes stock.")
     balance_before = models.PositiveIntegerField()

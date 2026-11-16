@@ -1,14 +1,17 @@
 import csv
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Q, Sum
+from django.db import IntegrityError, transaction
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
 from django.db.models.deletion import ProtectedError
-from django.db.models.functions import TruncDate
+from django.db.models.functions import Coalesce, TruncDate
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -35,22 +38,49 @@ from store.models import Category, Product
 
 User = get_user_model()
 
+PRODUCT_SORTS = (
+    ("newest", "Latest to oldest", ("-created_at", "pk")),
+    ("oldest", "Oldest to latest", ("created_at", "pk")),
+    ("name", "Alphabetical", ("name", "pk")),
+)
+
 
 def _page(request, queryset, per_page=20):
     return Paginator(queryset, per_page).get_page(request.GET.get("page"))
 
 
+def _unverified_gcash():
+    return Payment.objects.filter(method=Payment.GCASH, is_verified=False).exclude(order__status=Order.CANCELLED)
+
+
+def _line_revenue():
+    return ExpressionWrapper(
+        F("unit_price") * F("quantity"),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
+
+
+def _stock_money(quantity, unit_price):
+    return ExpressionWrapper(
+        quantity * unit_price,
+        output_field=DecimalField(max_digits=14, decimal_places=2),
+    )
+
+
 @staff_required
 def overview(request):
-    start = timezone.now() - timedelta(days=29)
-    sales_total = Order.objects.exclude(status=Order.CANCELLED).aggregate(total=Sum("total"))["total"] or 0
+    today = timezone.localdate()
+    window_start = today - timedelta(days=29)
+    sales_total = (
+        Order.objects.exclude(status=Order.CANCELLED).aggregate(total=Sum("total"))["total"] or Decimal("0.00")
+    )
     status_rows = Order.objects.values("status").annotate(count=Count("id"))
     status_map = {row["status"]: row["count"] for row in status_rows}
     daily = {
         row["day"]: float(row["total"] or 0)
         for row in (
             Order.objects.exclude(status=Order.CANCELLED)
-            .filter(created_at__gte=start)
+            .filter(created_at__date__gte=window_start, created_at__date__lte=today)
             .annotate(day=TruncDate("created_at"))
             .values("day")
             .annotate(total=Sum("total"))
@@ -58,7 +88,6 @@ def overview(request):
     }
     labels = []
     series = []
-    today = timezone.localdate()
     for offset in range(29, -1, -1):
         day = today - timedelta(days=offset)
         labels.append(day.strftime("%b %d"))
@@ -67,14 +96,14 @@ def overview(request):
     sold = OrderItem.objects.exclude(order__status=Order.CANCELLED)
     top_products = list(
         sold.values("product_name")
-        .annotate(qty=Sum("quantity"), revenue=Sum(F("unit_price") * F("quantity")))
-        .order_by("-qty")[:5]
+        .annotate(qty=Sum("quantity"), revenue=Sum(_line_revenue()))
+        .order_by("-qty", "-revenue")[:5]
     )
     top_categories = list(
-        sold.values(name=F("variant__product__category__name"))
-        .annotate(qty=Sum("quantity"), revenue=Sum(F("unit_price") * F("quantity")))
-        .exclude(name=None)
-        .order_by("-qty")[:6]
+        sold.exclude(category_name="")
+        .values(name=F("category_name"))
+        .annotate(qty=Sum("quantity"), revenue=Sum(_line_revenue()))
+        .order_by("-qty", "-revenue")[:6]
     )
     return render(
         request,
@@ -83,7 +112,7 @@ def overview(request):
             "sales_total": sales_total,
             "order_count": Order.objects.count(),
             "customer_count": User.objects.filter(is_staff=False).count(),
-            "pending_gcash": Payment.objects.filter(method=Payment.GCASH, is_verified=False).count(),
+            "pending_gcash": _unverified_gcash().count(),
             "status_labels": [label for _code, label in Order.STATUS_CHOICES],
             "status_counts": [status_map.get(code, 0) for code, _label in Order.STATUS_CHOICES],
             "chart_labels": labels,
@@ -91,9 +120,15 @@ def overview(request):
             "top_products": top_products,
             "top_categories": top_categories,
             "recent_orders": Order.objects.select_related("user", "payment")[:8],
-            "low_stock": ProductVariant.objects.filter(quantity_on_hand__gt=0, quantity_on_hand__lte=F("reorder_level"))
-            .select_related("product")[:8],
-            "out_of_stock": ProductVariant.objects.filter(quantity_on_hand=0, is_active=True).select_related("product")[:8],
+            "low_stock": ProductVariant.objects.filter(
+                is_active=True,
+                product__is_active=True,
+                quantity_on_hand__gt=0,
+                quantity_on_hand__lte=F("reorder_level"),
+            ).select_related("product")[:8],
+            "out_of_stock": ProductVariant.objects.filter(
+                quantity_on_hand=0, is_active=True, product__is_active=True
+            ).select_related("product")[:8],
         },
     )
 
@@ -101,10 +136,38 @@ def overview(request):
 @staff_required
 def product_list(request):
     query = request.GET.get("q", "").strip()
-    products = Product.objects.select_related("category").prefetch_related("variants")
+    sort = request.GET.get("sort", "newest")
+    ordering = next((item for item in PRODUCT_SORTS if item[0] == sort), PRODUCT_SORTS[0])
+    products = (
+        Product.objects.select_related("category")
+        .prefetch_related("images")
+        .annotate(
+            sku_count=Count("variants"),
+            units_on_hand=Coalesce(Sum("variants__quantity_on_hand"), 0),
+            stock_cost=Coalesce(
+                Sum(
+                    _stock_money(
+                        F("variants__quantity_on_hand"),
+                        Coalesce(F("variants__cost_price"), F("cost_price")),
+                    )
+                ),
+                Decimal("0.00"),
+            ),
+        )
+        .order_by(*ordering[2])
+    )
     if query:
         products = products.filter(Q(name__icontains=query) | Q(category__name__icontains=query))
-    return render(request, "dashboard/product_list.html", {"page": _page(request, products), "query": query})
+    return render(
+        request,
+        "dashboard/product_list.html",
+        {
+            "page": _page(request, products),
+            "query": query,
+            "sort": ordering[0],
+            "sorts": [(key, label) for key, label, _order in PRODUCT_SORTS],
+        },
+    )
 
 
 @staff_required
@@ -138,11 +201,17 @@ def product_edit(request, pk=None):
 @require_POST
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    name = product.name
+    photo_count = product.images.count()
     try:
         product.delete()
-        messages.success(request, "Product deleted.")
     except ProtectedError:
-        messages.error(request, "This product has orders, so it was kept. Mark it inactive instead.")
+        messages.error(request, "This product is still linked to other records, so it was kept.")
+        return redirect("dashboard:products")
+    if photo_count:
+        messages.success(request, f"Deleted {name}. {photo_count} photo{'s' if photo_count != 1 else ''} removed from storage.")
+    else:
+        messages.success(request, f"Deleted {name}.")
     return redirect("dashboard:products")
 
 
@@ -195,18 +264,22 @@ def variant_edit(request, pk=None, product_pk=None):
         if creating:
             saved.quantity_on_hand = 0
             saved.sku = build_sku(product, saved.color_name, saved.size, saved.capacity)
-        saved.save()
-        opening = form.cleaned_data.get("opening_quantity") or 0
-        if creating and opening:
-            move_stock(
-                variant=saved,
-                quantity=opening,
-                movement_type=StockMovement.STOCK_IN,
-                user=request.user,
-                notes=form.cleaned_data["reason"].strip(),
-            )
-        messages.success(request, "Variant saved.")
-        return redirect("dashboard:variants", product_pk=product.pk)
+        try:
+            saved.save()
+        except IntegrityError:
+            form.add_error("color_name", "This color and option already exists for this product.")
+        else:
+            opening = form.cleaned_data.get("opening_quantity") or 0
+            if creating and opening:
+                move_stock(
+                    variant=saved,
+                    quantity=opening,
+                    movement_type=StockMovement.STOCK_IN,
+                    user=request.user,
+                    notes=form.cleaned_data["reason"].strip(),
+                )
+            messages.success(request, "Variant saved.")
+            return redirect("dashboard:variants", product_pk=product.pk)
     return render(request, "dashboard/variant_form.html", {"form": form, "product": product, "variant": variant})
 
 
@@ -226,7 +299,9 @@ def variant_generate(request, product_pk):
         for color_name, color_hex in data["parsed_colors"]:
             for size in sizes:
                 for capacity in capacities:
-                    exists = product.variants.filter(color_name=color_name, size=size or "", capacity=capacity or "").exists()
+                    exists = product.variants.filter(
+                        color_name__iexact=color_name, size=size or "", capacity=capacity or ""
+                    ).exists()
                     if exists:
                         continue
                     variant = ProductVariant.objects.create(
@@ -252,7 +327,10 @@ def variant_generate(request, product_pk):
                             notes=data["reason"].strip(),
                         )
                     created += 1
-        messages.success(request, f"Created {created} variant{'s' if created != 1 else ''}.")
+        if created:
+            messages.success(request, f"Created {created} variant{'s' if created != 1 else ''}.")
+        else:
+            messages.info(request, "Those colors and sizes already exist, so no new variants were added.")
         return redirect("dashboard:variants", product_pk=product.pk)
     return render(request, "dashboard/variant_generate.html", {"form": form, "product": product})
 
@@ -277,17 +355,27 @@ def _filtered_orders(request):
     start = request.GET.get("start", "")
     end = request.GET.get("end", "")
     query = request.GET.get("q", "").strip()
+    verified = request.GET.get("verified", "")
     if status:
         orders = orders.filter(status=status)
     if method:
         orders = orders.filter(payment__method=method)
+    if verified == "pending":
+        orders = orders.filter(payment__is_verified=False).exclude(status=Order.CANCELLED)
     if start:
         orders = orders.filter(created_at__date__gte=start)
     if end:
         orders = orders.filter(created_at__date__lte=end)
     if query:
         orders = orders.filter(Q(number__icontains=query) | Q(recipient_name__icontains=query) | Q(user__email__icontains=query))
-    return orders, {"status": status, "method": method, "start": start, "end": end, "q": query}
+    return orders, {
+        "status": status,
+        "method": method,
+        "start": start,
+        "end": end,
+        "q": query,
+        "verified": verified,
+    }
 
 
 @staff_required
@@ -297,7 +385,7 @@ def order_list(request):
         "total": Order.objects.count(),
         "new": Order.objects.filter(status=Order.NEW).count(),
         "active": Order.objects.filter(status__in=[Order.PROCESSING, Order.FOR_DELIVERY, Order.SHIPPED]).count(),
-        "unverified_gcash": Payment.objects.filter(method=Payment.GCASH, is_verified=False).count(),
+        "unverified_gcash": _unverified_gcash().count(),
     }
     return render(
         request,
@@ -310,6 +398,21 @@ def order_list(request):
             "summary": summary,
         },
     )
+
+
+@staff_required
+@require_POST
+def order_cancel(request, number):
+    order = get_object_or_404(Order, number=number)
+    if order.status == Order.CANCELLED:
+        messages.info(request, f"{order.number} is already cancelled.")
+    else:
+        set_order_status(order, Order.CANCELLED, request.user, "Cancelled by staff")
+        messages.success(request, f"{order.number} was cancelled. Reserved stock is back on the shelf.")
+    next_url = reverse("dashboard:orders")
+    if request.GET:
+        next_url = f"{next_url}?{request.GET.urlencode()}"
+    return redirect(next_url)
 
 
 @staff_required
@@ -335,7 +438,9 @@ def order_detail(request, number):
                     return redirect("dashboard:order_detail", number=order.number)
         elif action == "verify":
             payment = order.payment
-            if payment.method == Payment.GCASH and not payment.is_verified:
+            if order.status == Order.CANCELLED:
+                messages.error(request, "This order is cancelled, so the payment stays unverified.")
+            elif payment.method == Payment.GCASH and not payment.is_verified:
                 payment.is_verified = True
                 payment.verified_by = request.user
                 payment.verified_at = timezone.now()
@@ -383,7 +488,7 @@ def message_toggle(request, pk):
 @staff_required
 def site_settings_view(request):
     settings_row = SiteSettings.load()
-    form = SiteSettingsForm(request.POST or None, instance=settings_row)
+    form = SiteSettingsForm(request.POST or None, request.FILES or None, instance=settings_row)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Site settings saved.")
@@ -414,13 +519,20 @@ def _inventory_queryset(request):
 @staff_required
 def inventory_list(request):
     variants, filters = _inventory_queryset(request)
-    all_variants = ProductVariant.objects.all()
-    summary = {
-        "skus": all_variants.count(),
-        "units": all_variants.aggregate(total=Sum("quantity_on_hand"))["total"] or 0,
-        "low": all_variants.filter(quantity_on_hand__gt=0, quantity_on_hand__lte=F("reorder_level")).count(),
-        "out": all_variants.filter(quantity_on_hand=0).count(),
-    }
+    summary = variants.aggregate(
+        skus=Count("id"),
+        units=Coalesce(Sum("quantity_on_hand"), 0),
+        low=Count("id", filter=Q(quantity_on_hand__gt=0, quantity_on_hand__lte=F("reorder_level"))),
+        out=Count("id", filter=Q(quantity_on_hand=0)),
+        cost_value=Coalesce(
+            Sum(_stock_money(F("quantity_on_hand"), Coalesce(F("cost_price"), F("product__cost_price")))),
+            Decimal("0.00"),
+        ),
+        retail_value=Coalesce(
+            Sum(_stock_money(F("quantity_on_hand"), Coalesce(F("selling_price"), F("product__base_price")))),
+            Decimal("0.00"),
+        ),
+    )
     return render(
         request,
         "dashboard/inventory.html",
@@ -440,7 +552,7 @@ def inventory_export(request):
     response["Content-Disposition"] = 'attachment; filename="boloman-inventory.csv"'
     writer = csv.writer(response)
     writer.writerow(
-        ["SKU", "Product", "Category", "Color", "Size", "Capacity", "On hand", "Reorder level", "Status", "Cost", "Price", "Supplier", "Location"]
+        ["SKU", "Product", "Category", "Color", "Size", "Capacity", "On hand", "Reorder level", "Status", "Cost", "Selling price", "Supplier", "Location"]
     )
     for variant in variants:
         writer.writerow(
@@ -454,7 +566,7 @@ def inventory_export(request):
                 variant.quantity_on_hand,
                 variant.reorder_level,
                 variant.stock_label,
-                variant.cost_price,
+                variant.unit_cost,
                 variant.price,
                 variant.supplier.name if variant.supplier else "",
                 variant.location,
@@ -472,16 +584,17 @@ def stock_in(request):
     form = StockInForm(request.POST or None, initial=None if request.method == "POST" else initial)
     if request.method == "POST" and form.is_valid():
         variant = form.cleaned_data["variant"]
-        if form.cleaned_data.get("unit_cost") is not None:
-            variant.cost_price = form.cleaned_data["unit_cost"]
-            variant.save(update_fields=["cost_price"])
-        move_stock(
-            variant=variant,
-            quantity=form.cleaned_data["quantity"],
-            movement_type=StockMovement.STOCK_IN,
-            user=request.user,
-            notes=form.cleaned_data["reason"].strip(),
-        )
+        with transaction.atomic():
+            if form.cleaned_data.get("unit_cost") is not None:
+                variant.cost_price = form.cleaned_data["unit_cost"]
+                variant.save(update_fields=["cost_price"])
+            move_stock(
+                variant=variant,
+                quantity=form.cleaned_data["quantity"],
+                movement_type=StockMovement.STOCK_IN,
+                user=request.user,
+                notes=form.cleaned_data["reason"].strip(),
+            )
         messages.success(request, f"Stock added to {variant.sku}.")
         return redirect("dashboard:inventory")
     return render(request, "dashboard/stock_form.html", {"form": form, "title": "Stock in", "lead": "Receive new units and record why they arrived."})

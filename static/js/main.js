@@ -97,49 +97,121 @@
     const target = Number(element.dataset.counter || 0);
     const prefix = element.dataset.prefix || "";
     const suffix = element.dataset.suffix || "";
-    if (reduce) {
-      element.textContent = prefix + target.toLocaleString() + suffix;
-      return;
+    const decimals = Math.max(0, parseInt(element.dataset.decimals || "0", 10) || 0);
+    function format(value) {
+      const amount = Number.isFinite(value) ? value : 0;
+      return prefix + amount.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }) + suffix;
     }
+    element.textContent = format(target);
+    if (reduce || !Number.isFinite(target)) return;
     const start = performance.now();
     function frame(now) {
       const progress = Math.min(1, (now - start) / 950);
-      const value = Math.round(target * (1 - Math.pow(1 - progress, 3)));
-      element.textContent = prefix + value.toLocaleString() + suffix;
+      const eased = target * (1 - Math.pow(1 - progress, 3));
+      element.textContent = format(progress === 1 ? target : eased);
       if (progress < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
-  if ("IntersectionObserver" in window) {
-    const counterObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          runCounter(entry.target);
-          counterObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
-    counters.forEach(function (element) { counterObserver.observe(element); });
-  } else {
-    counters.forEach(runCounter);
+  counters.forEach(runCounter);
+
+  /* Search inside long dropdowns. Short lists stay native selects. */
+  document.querySelectorAll("select").forEach(function (select) {
+    if (!window.TomSelect || select.tomselect) return;
+    if (select.dataset.search === "off" || select.multiple) return;
+    if (select.offsetParent === null && select.dataset.search !== "on") return;
+    let choices = 0;
+    Array.prototype.forEach.call(select.options, function (option) {
+      if (option.value) choices += 1;
+    });
+    if (select.dataset.search !== "on" && choices < 8) return;
+    const placeholder = select.dataset.searchPlaceholder || "Search";
+    const control = new TomSelect(select, {
+      plugins: ["dropdown_input"],
+      allowEmptyOption: true,
+      maxOptions: null,
+      closeAfterSelect: true,
+      dropdownParent: "body",
+      onDropdownOpen: function () {
+        const input = this.dropdown.querySelector(".dropdown-input");
+        if (!input) return;
+        input.placeholder = placeholder;
+        input.setAttribute("aria-label", placeholder);
+      },
+    });
+    const wrapper = control.wrapper;
+    if (select.classList.contains("form-select-sm")) wrapper.classList.add("ts-sm");
+    if (select.closest(".field-error")) wrapper.classList.add("ts-invalid");
+  });
+
+  /* SweetAlert confirmation and submit loading spinner */
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
+    });
   }
 
-  /* Confirmation Modal & Submit Loading Spinner */
-  const modalElement = document.getElementById("confirmModal");
-  const confirmModal = modalElement && window.bootstrap ? new bootstrap.Modal(modalElement) : null;
-  let pendingForm = null;
-  let pendingButton = null;
+  function confirmCopy(button, form) {
+    const message = (button && button.dataset.confirm) || form.dataset.confirm || "";
+    const tone = (button && button.dataset.confirmTone) || (/delete|cancel/i.test(message) ? "danger" : "confirm");
+    const danger = tone === "danger";
+    const title = (button && button.dataset.confirmTitle) || (danger ? "Please confirm" : "Confirm this action");
+    const detail = (button && button.dataset.confirmDetail) || "";
+    const accept = (button && button.dataset.confirmAccept) || (danger ? "Continue" : "Confirm");
+    const icon = danger ? "bi-trash3" : "bi-shield-check";
+    const html = '<div class="bolo-alert-mark" aria-hidden="true"><i class="bi ' + icon + '"></i></div>'
+      + '<h2 class="bolo-alert-heading">' + escapeHtml(title) + "</h2>"
+      + '<p class="bolo-alert-lead">' + escapeHtml(message) + "</p>"
+      + (detail ? '<p class="bolo-alert-note">' + escapeHtml(detail) + "</p>" : "");
+    return { danger: danger, title: title, accept: accept, html: html };
+  }
+
+  function askConfirm(button, form) {
+    const copy = confirmCopy(button, form);
+    if (!window.Swal) {
+      const plain = [copy.title, button && button.dataset.confirm, button && button.dataset.confirmDetail].filter(Boolean).join("\n\n");
+      return Promise.resolve({ isConfirmed: window.confirm(plain) });
+    }
+    return Swal.fire({
+      title: "",
+      html: copy.html,
+      showCancelButton: true,
+      focusCancel: copy.danger,
+      reverseButtons: true,
+      buttonsStyling: false,
+      heightAuto: false,
+      confirmButtonText: copy.accept,
+      cancelButtonText: "Go back",
+      showClass: { popup: "bolo-alert-in", backdrop: "bolo-alert-backdrop-in" },
+      hideClass: { popup: "bolo-alert-out" },
+      customClass: {
+        container: "bolo-alert-container",
+        popup: "bolo-alert" + (copy.danger ? " is-danger" : " is-confirm"),
+        title: "bolo-alert-title",
+        htmlContainer: "bolo-alert-body",
+        actions: "bolo-alert-actions",
+        confirmButton: copy.danger ? "bolo-alert-btn bolo-alert-btn-danger" : "bolo-alert-btn bolo-alert-btn-primary",
+        cancelButton: "bolo-alert-btn bolo-alert-btn-ghost",
+      },
+    });
+  }
+
   document.addEventListener("submit", function (event) {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;
     const button = event.submitter;
     const message = (button && button.dataset.confirm) || form.dataset.confirm;
-    if (message && form.dataset.confirmed !== "1" && confirmModal) {
+    if (message && form.dataset.confirmed !== "1") {
       event.preventDefault();
-      pendingForm = form;
-      pendingButton = button;
-      document.getElementById("confirmCopy").textContent = message;
-      confirmModal.show();
+      askConfirm(button, form).then(function (result) {
+        if (!result.isConfirmed) return;
+        form.dataset.confirmed = "1";
+        if (button) form.requestSubmit(button);
+        else form.requestSubmit();
+      });
       return;
     }
     if (form.dataset.spinner === "off" || !button || button.dataset.loading === "1") return;
@@ -147,14 +219,4 @@
     button.setAttribute("aria-busy", "true");
     button.insertAdjacentHTML("beforeend", '<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>');
   });
-  const confirmButton = document.getElementById("confirmAccept");
-  if (confirmButton) {
-    confirmButton.addEventListener("click", function () {
-      if (!pendingForm) return;
-      pendingForm.dataset.confirmed = "1";
-      if (confirmModal) confirmModal.hide();
-      if (pendingButton) pendingForm.requestSubmit(pendingButton);
-      else pendingForm.requestSubmit();
-    });
-  }
 })();

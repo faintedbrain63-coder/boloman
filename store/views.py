@@ -12,7 +12,9 @@ OPTION_ORDER = {
 }
 
 SORTS = {
-    "newest": "Newest arrivals",
+    "newest": "Latest to oldest",
+    "oldest": "Oldest to latest",
+    "name": "Alphabetical",
     "price_asc": "Price: low to high",
     "price_desc": "Price: high to low",
 }
@@ -64,8 +66,12 @@ def product_list(request):
         products = products.order_by("sort_price", "name")
     elif sort == "price_desc":
         products = products.order_by("-sort_price", "name")
+    elif sort == "oldest":
+        products = products.order_by("created_at", "name")
+    elif sort == "name":
+        products = products.order_by("name", "pk")
     else:
-        products = products.order_by("-created_at")
+        products = products.order_by("-created_at", "name")
 
     categories = (
         Category.objects.filter(is_active=True)

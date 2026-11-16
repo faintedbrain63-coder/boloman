@@ -103,14 +103,16 @@
         </div>
         {% if order.payment.is_verified %}
           <div class="status-badge badge-in"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Verified by {{ order.payment.verified_by }} on {{ order.payment.verified_at|date:"M j, Y g:i A" }}</div>
-        {% else %}
+        {% elif order.status != "CANCELLED" %}
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="verify">
-            <button class="btn btn-teal w-100" type="submit" data-confirm="Confirm that GCash reference {{ order.payment.gcash_reference }} has been received?">
+            <button class="btn btn-teal w-100" type="submit" data-confirm="Reference {{ order.payment.gcash_reference|default:'—' }} will be marked as received." data-confirm-title="Verify this GCash payment?" data-confirm-tone="confirm" data-confirm-accept="Mark verified" data-confirm-detail="This records your name and the time of verification on the order.">
               <i class="bi bi-shield-check" aria-hidden="true"></i> Mark GCash Payment Verified
             </button>
           </form>
+        {% else %}
+          <p class="small text-muted mb-0">This order is cancelled, so the payment stays unverified.</p>
         {% endif %}
       {% else %}
         <p class="small text-muted mb-0">Cash on Delivery — rider collects {{ order.payment.amount|peso }} upon handoff.</p>

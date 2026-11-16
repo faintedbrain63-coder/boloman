@@ -120,6 +120,14 @@ ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_ADAPTER = "accounts.adapter.AccountAdapter"
+ACCOUNT_FORMS = {
+    "login": "accounts.forms.BolomanLoginForm",
+    "signup": "accounts.forms.BolomanSignupForm",
+    "reset_password": "accounts.forms.BolomanResetPasswordForm",
+    "reset_password_from_key": "accounts.forms.BolomanResetPasswordKeyForm",
+    "change_password": "accounts.forms.BolomanChangePasswordForm",
+    "set_password": "accounts.forms.BolomanSetPasswordForm",
+}
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 
 SOCIALACCOUNT_AUTO_SIGNUP = True

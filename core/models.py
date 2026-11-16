@@ -1,5 +1,8 @@
 from decouple import config
+from django.core.files.storage import default_storage
 from django.db import models
+
+from core.validators import validate_image_file
 
 
 class SiteSettings(models.Model):
@@ -12,6 +15,13 @@ class SiteSettings(models.Model):
     map_embed_url = models.URLField(blank=True)
     gcash_number = models.CharField(max_length=40)
     gcash_account_name = models.CharField(max_length=120)
+    gcash_qr = models.ImageField(
+        upload_to="payments/gcash-qr/",
+        blank=True,
+        validators=[validate_image_file],
+        verbose_name="GCash QR code",
+        help_text="Upload the QR code from your GCash app. Customers scan it when they pay.",
+    )
     tagline = models.CharField(max_length=200, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -24,7 +34,12 @@ class SiteSettings(models.Model):
 
     def save(self, *args, **kwargs):
         self.pk = 1
+        previous = type(self).objects.filter(pk=1).first()
+        previous_name = previous.gcash_qr.name if previous and previous.gcash_qr else ""
         super().save(*args, **kwargs)
+        current_name = self.gcash_qr.name if self.gcash_qr else ""
+        if previous_name and previous_name != current_name:
+            default_storage.delete(previous_name)
 
     @classmethod
     def defaults(cls):

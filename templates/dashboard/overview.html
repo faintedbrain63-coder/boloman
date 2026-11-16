@@ -8,7 +8,7 @@
     <div class="panel kpi">
       <div>
         <span class="kpi-label">Total Revenue</span>
-        <strong data-counter="{{ sales_total|floatformat:0 }}" data-prefix="₱">₱0</strong>
+        <strong data-counter="{{ sales_total|floatformat:2 }}" data-decimals="2" data-prefix="₱">₱0.00</strong>
         <div class="kpi-sub">Excludes cancelled orders</div>
       </div>
       <div class="kpi-icon" style="background: var(--ok-bg); color: var(--ok);"><i class="bi bi-cash-stack" aria-hidden="true"></i></div>
@@ -39,7 +39,7 @@
       <div>
         <span class="kpi-label">GCash Pending</span>
         <strong data-counter="{{ pending_gcash }}">0</strong>
-        <div class="kpi-sub"><a href="{% url 'dashboard:orders' %}?method=GCASH">Verify receipts →</a></div>
+        <div class="kpi-sub"><a href="{% url 'dashboard:orders' %}?method=GCASH&verified=pending">Verify receipts →</a></div>
       </div>
       <div class="kpi-icon" style="background: var(--warning-bg); color: var(--warning);"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
     </div>
@@ -156,7 +156,7 @@
             </div>
           </div>
         {% empty %}
-          <p class="text-muted small mb-0">No variants are below reorder threshold.</p>
+          <p class="text-muted small mb-0">No active variants are below the reorder level.</p>
         {% endfor %}
       </div>
     </div>

@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -32,8 +33,16 @@ class Category(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.strip().upper()
         if not self.slug:
-            self.slug = slugify(self.name)
+            base = slugify(self.name)[:50] or "category"
+            slug = base
+            number = 2
+            while Category.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{number}"
+                number += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -54,7 +63,21 @@ class Product(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     short_description = models.CharField(max_length=220, blank=True)
     description = models.TextField()
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_price = models.DecimalField(
+        "Cost price",
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="What you pay when you buy this product.",
+    )
+    base_price = models.DecimalField(
+        "Selling price",
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        help_text="What the customer pays when you sell this product.",
+    )
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -123,3 +146,11 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return self.alt_text or f"Image for {self.product.name}"
+
+    def delete(self, *args, **kwargs):
+        name = self.image.name if self.image else ""
+        storage = self.image.storage if self.image else None
+        result = super().delete(*args, **kwargs)
+        if name and storage and storage.exists(name):
+            storage.delete(name)
+        return result
