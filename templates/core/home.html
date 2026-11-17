@@ -2,417 +2,493 @@
 {% load static shop %}
 
 {% block extra_css %}
-  <link href="{% static 'css/landing.css' %}?v=5" rel="stylesheet">
+  <link href="{% static 'css/landing.css' %}?v=8" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="scroll-laser" id="scroll-laser" aria-hidden="true"></div>
 
-<!-- 1. Futuristic Aurora & Interactive Holo-Studio Hero -->
-<section class="nx-hero">
-  <div class="nx-grid-bg" aria-hidden="true"></div>
-  <div class="nx-orb nx-orb-1" aria-hidden="true"></div>
-  <div class="nx-orb nx-orb-2" aria-hidden="true"></div>
+<div class="nx-spatial-root">
+  <section class="nx-hero" id="hero-3d">
+    <div class="container position-relative" style="z-index: 2;">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-7 nx-hero-copy-3d">
+          <div class="nx-telemetry-pill hero-enter-3d" style="--enter-delay: 40ms;">
+            <span class="nx-live-dot" aria-hidden="true"></span>
+            <span>3D LIVE WAREHOUSE TELEMETRY · {{ total_units }} UNITS READY ACROSS {{ variant_count }} SKUs</span>
+          </div>
 
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-7">
-        <div class="nx-telemetry-pill">
-          <span class="nx-live-dot" aria-hidden="true"></span>
-          <span>LIVE WAREHOUSE TELEMETRY · {{ total_units }} UNITS READY ACROSS {{ variant_count }} SKUs</span>
+          <h1 class="nx-hero-title hero-enter-3d" style="--enter-delay: 120ms;">
+            Next-gen custom merch, engineered in
+            <span class="nx-gradient-text">3D real-time precision.</span>
+          </h1>
+
+          <p class="nx-hero-lead mb-4 hero-enter-3d" style="--enter-delay: 200ms;">
+            Design team jerseys, cotton tees, laser-etched tumblers, ceramic mugs, and stitched caps. Inspect every surface in interactive 3D and verify exact warehouse stock before you press order.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3 hero-enter-3d" style="--enter-delay: 280ms;">
+            <a class="btn btn-glow-primary btn-lg" data-magnetic href="{% url 'store:product_list' %}">
+              <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> Launch 3D Catalog
+            </a>
+            <a class="btn btn-glass btn-lg" data-magnetic href="#how-it-works">
+              <i class="bi bi-boxes" aria-hidden="true"></i> 4-Step Buying Flow
+            </a>
+            <a class="btn btn-glass btn-lg" data-magnetic href="#contact">
+              Bulk &amp; Team Runs
+            </a>
+          </div>
+
+          <div class="nx-hero-stats hero-enter-3d" style="--enter-delay: 360ms;">
+            <div class="nx-mini-stat" data-tilt-3d data-tilt-max="8">
+              <div class="nx-stat-sheen" aria-hidden="true"></div>
+              <strong data-counter="{{ product_count }}">0</strong>
+              <span>Customizable Blanks</span>
+            </div>
+            <div class="nx-mini-stat" data-tilt-3d data-tilt-max="8">
+              <div class="nx-stat-sheen" aria-hidden="true"></div>
+              <strong data-counter="{{ variant_count }}">0</strong>
+              <span>Tracked Color × Size SKUs</span>
+            </div>
+            <div class="nx-mini-stat" data-tilt-3d data-tilt-max="8">
+              <div class="nx-stat-sheen" aria-hidden="true"></div>
+              <strong data-counter="{{ total_units }}">0</strong>
+              <span>In-Stock Units Ready</span>
+            </div>
+          </div>
         </div>
 
-        <h1 class="nx-hero-title">
-          Next-gen custom merch, engineered with
-          <span class="nx-gradient-text">real-time stock precision.</span>
-        </h1>
-
-        <p class="nx-hero-lead mb-4">
-          Design team jerseys, cotton tees, laser-etched tumblers, ceramic mugs, and stitched caps. Every color and size shows exact warehouse inventory before you press order.
-        </p>
-
-        <div class="d-flex flex-wrap gap-3">
-          <a class="btn btn-glow-primary btn-lg" data-magnetic href="{% url 'store:product_list' %}">
-            <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> Launch Catalog
-          </a>
-          <a class="btn btn-glass btn-lg" data-magnetic href="#how-it-works">
-            <i class="bi bi-cpu" aria-hidden="true"></i> Explore Pipeline
-          </a>
-          <a class="btn btn-glass btn-lg" href="#contact">
-            Bulk &amp; Team Runs
-          </a>
-        </div>
-
-        <div class="nx-hero-stats">
-          <div class="nx-mini-stat">
-            <strong data-counter="{{ product_count }}">0</strong>
-            <span>Customizable Blanks</span>
-          </div>
-          <div class="nx-mini-stat">
-            <strong data-counter="{{ variant_count }}">0</strong>
-            <span>Tracked Color × Size SKUs</span>
-          </div>
-          <div class="nx-mini-stat">
-            <strong data-counter="{{ total_units }}">0</strong>
-            <span>In-Stock Units Ready</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive 3D Holo-Print Studio Preview -->
-      <div class="col-lg-5">
-        <div class="holo-stage-wrap">
-          <div class="holo-studio" id="holo-studio" aria-label="Interactive print preview studio">
-            <div class="holo-topbar">
-              <div class="holo-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-              <span class="holo-tag">BOLOMAN STUDIO · LIVE PREVIEW</span>
+        <!-- Interactive Multi-Layer 3D Holo-Print Studio + 360° WebGL Turntable -->
+        <div class="col-lg-5 hero-enter-3d" style="--enter-delay: 220ms;">
+          <div class="holo-stage-wrap">
+            <div class="holo-orbit-halo" aria-hidden="true">
+              <span class="halo-ring halo-ring-1"></span>
+              <span class="halo-ring halo-ring-2"></span>
             </div>
 
-            <div class="holo-tabs" role="tablist" aria-label="Choose blank type">
-              <button type="button" class="holo-tab is-active" role="tab" aria-selected="true" data-studio-item="tee">Cotton Tee</button>
-              <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="jersey">Subli Jersey</button>
-              <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="mug">Photo Mug</button>
-              <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="cap">Dad Cap</button>
-            </div>
+            <div class="holo-studio" id="holo-studio" aria-label="Interactive 3D print preview studio">
+              <div class="holo-glare" id="holo-glare" aria-hidden="true"></div>
 
-            <div class="holo-viewport" id="holo-viewport">
-              <div class="holo-scanline" aria-hidden="true"></div>
-              <span class="holo-method-chip" id="holo-method">DTF / Screen Print</span>
-              <img id="holo-photo" class="holo-photo" src="{% static 'img/landing_page_pics.jpg' %}" alt="1st Training Group sublimated jersey, front and back">
-              <div class="holo-print-projection" aria-live="polite">
-                <span class="holo-print-label">LIVE PRINT PROOF</span>
-                <strong id="holo-print-text">BOLOMAN 26</strong>
-              </div>
-              <span class="holo-sku-chip" id="holo-sku">SKU CTN-TEAL-M</span>
-            </div>
-
-            <div class="holo-controls">
-              <div class="d-flex justify-content-between align-items-center">
-                <span class="small text-secondary fw-semibold">Blank Color</span>
-                <div class="holo-swatches" role="group" aria-label="Preview blank color">
-                  <button type="button" class="holo-swatch is-active" style="background:#0f766e" data-studio-color="#0f766e" data-code="TEAL" aria-label="Teal"></button>
-                  <button type="button" class="holo-swatch" style="background:#111827" data-studio-color="#111827" data-code="BLK" aria-label="Black"></button>
-                  <button type="button" class="holo-swatch" style="background:#1e3a8a" data-studio-color="#1e3a8a" data-code="NVY" aria-label="Navy"></button>
-                  <button type="button" class="holo-swatch" style="background:#b91c1c" data-studio-color="#b91c1c" data-code="RED" aria-label="Crimson"></button>
-                  <button type="button" class="holo-swatch" style="background:#475569" data-studio-color="#475569" data-code="GRY" aria-label="Slate"></button>
+              <div class="holo-topbar holo-z-1">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="holo-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <span class="holo-tag">BOLOMAN · 3D STUDIO</span>
+                </div>
+                <div class="holo-mode-switch" role="group" aria-label="Preview render mode">
+                  <button type="button" class="holo-mode-btn is-active" data-studio-mode="photo">Showcase</button>
+                  <button type="button" class="holo-mode-btn" data-studio-mode="mesh">
+                    <i class="bi bi-box" aria-hidden="true"></i> 360° 3D
+                  </button>
                 </div>
               </div>
 
-              <div>
-                <label class="small text-secondary fw-semibold d-block mb-1" for="holo-text">Type Live Print Text</label>
-                <input id="holo-text" class="holo-input" type="text" maxlength="14" value="BOLOMAN 26" placeholder="Type team or brand name…">
+              <div class="holo-tabs holo-z-2" role="tablist" aria-label="Choose blank type">
+                <button type="button" class="holo-tab is-active" role="tab" aria-selected="true" data-studio-item="tee">Cotton Tee</button>
+                <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="jersey">Subli Jersey</button>
+                <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="mug">Photo Mug</button>
+                <button type="button" class="holo-tab" role="tab" aria-selected="false" data-studio-item="cap">Dad Cap</button>
               </div>
-            </div>
 
-            <div class="holo-footer">
-              <div>
-                <span class="d-block small text-secondary" style="line-height: 1.1;">Starts at</span>
-                <strong class="fs-5 text-white" id="holo-price">₱350.00</strong>
+              <div class="holo-viewport holo-z-3" id="holo-viewport">
+                <div class="holo-scanline" aria-hidden="true"></div>
+                <span class="holo-method-chip holo-z-chip" id="holo-method">DTF / Screen Print</span>
+
+                <img id="holo-photo" class="holo-photo" src="{% static 'img/landing_page_pics.jpg' %}" alt="1st Training Group sublimated jersey, front and back">
+
+                <div class="holo-3d-turntable" id="holo-3d-turntable" hidden>
+                  <canvas id="holo-3d-canvas" aria-label="Interactive 360 degree 3D merchandise model"></canvas>
+                  <span class="holo-drag-hint"><i class="bi bi-arrows-move" aria-hidden="true"></i> Drag to spin 360°</span>
+                </div>
+
+                <button type="button" class="holo-3d-quick-pill holo-z-chip" id="holo-launch-3d" title="Switch to interactive 360° 3D model">
+                  <i class="bi bi-badge-3d-fill" aria-hidden="true"></i> Spin in 3D
+                </button>
+
+                <div class="holo-print-projection holo-z-float" id="holo-projection" aria-live="polite">
+                  <span class="holo-print-label">LIVE PRINT PROOF</span>
+                  <strong id="holo-print-text">BOLOMAN 26</strong>
+                </div>
+                <span class="holo-sku-chip holo-z-chip" id="holo-sku">SKU CTN-TEAL-M</span>
               </div>
-              <a id="holo-cta" class="btn btn-teal btn-sm px-3" href="{% url 'store:product_list' %}?category=cotton-shirts">
-                Configure Real Blank <i class="bi bi-arrow-right" aria-hidden="true"></i>
-              </a>
+
+              <div class="holo-controls holo-z-2">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="small text-secondary fw-semibold">Blank Color</span>
+                  <div class="holo-swatches" role="group" aria-label="Preview blank color">
+                    <button type="button" class="holo-swatch is-active" style="background:#0f766e" data-studio-color="#0f766e" data-code="TEAL" aria-label="Teal"></button>
+                    <button type="button" class="holo-swatch" style="background:#111827" data-studio-color="#111827" data-code="BLK" aria-label="Black"></button>
+                    <button type="button" class="holo-swatch" style="background:#1e3a8a" data-studio-color="#1e3a8a" data-code="NVY" aria-label="Navy"></button>
+                    <button type="button" class="holo-swatch" style="background:#b91c1c" data-studio-color="#b91c1c" data-code="RED" aria-label="Crimson"></button>
+                    <button type="button" class="holo-swatch" style="background:#475569" data-studio-color="#475569" data-code="GRY" aria-label="Slate"></button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="small text-secondary fw-semibold d-block mb-1" for="holo-text">Type Live Print Text</label>
+                  <input id="holo-text" class="holo-input" type="text" maxlength="14" value="BOLOMAN 26" placeholder="Type team or brand name…">
+                </div>
+              </div>
+
+              <div class="holo-footer holo-z-2">
+                <div>
+                  <span class="d-block small text-secondary" style="line-height: 1.1;">Starts at</span>
+                  <strong class="fs-5 text-white" id="holo-price">₱350.00</strong>
+                </div>
+                <a id="holo-cta" class="btn btn-teal btn-sm px-3" href="{% url 'store:product_list' %}?category=cotton-shirts">
+                  Configure Real Blank <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+              </div>
             </div>
+            <div class="holo-floor-shadow" aria-hidden="true"></div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- 2. Infinite Kinetic Capability Ticker -->
-<div class="nx-marquee" aria-label="Studio capabilities">
-  <div class="nx-marquee-track">
-    <span class="nx-marquee-item"><i class="bi bi-layers-fill"></i> Full Dye-Sublimation</span>
-    <span class="nx-marquee-item"><i class="bi bi-droplet-half"></i> High-Density Screen &amp; DTF</span>
-    <span class="nx-marquee-item"><i class="bi bi-stars"></i> 3D Cap Embroidery</span>
-    <span class="nx-marquee-item"><i class="bi bi-bullseye"></i> Laser &amp; UV Rotational Drinkware</span>
-    <span class="nx-marquee-item"><i class="bi bi-shield-lock-fill"></i> Atomic SKU Stock Reservation</span>
-    <span class="nx-marquee-item"><i class="bi bi-wallet2"></i> Cash on Delivery &amp; GCash Verified</span>
+  <!-- 2. Dual-Plane 3D Perspective Capability Ticker -->
+  <div class="nx-marquee-3d-wrap" aria-label="Studio capabilities">
+    <div class="nx-marquee">
+      <div class="nx-marquee-track">
+        <span class="nx-marquee-item"><i class="bi bi-layers-fill"></i> Full Dye-Sublimation</span>
+        <span class="nx-marquee-item"><i class="bi bi-droplet-half"></i> High-Density Screen &amp; DTF</span>
+        <span class="nx-marquee-item"><i class="bi bi-stars"></i> 3D Cap Embroidery</span>
+        <span class="nx-marquee-item"><i class="bi bi-bullseye"></i> Laser &amp; UV Rotational Drinkware</span>
+        <span class="nx-marquee-item"><i class="bi bi-shield-lock-fill"></i> Atomic SKU Stock Reservation</span>
+        <span class="nx-marquee-item"><i class="bi bi-wallet2"></i> Cash on Delivery &amp; GCash QR Verified</span>
+      </div>
+      <div class="nx-marquee-track" aria-hidden="true">
+        <span class="nx-marquee-item"><i class="bi bi-layers-fill"></i> Full Dye-Sublimation</span>
+        <span class="nx-marquee-item"><i class="bi bi-droplet-half"></i> High-Density Screen &amp; DTF</span>
+        <span class="nx-marquee-item"><i class="bi bi-stars"></i> 3D Cap Embroidery</span>
+        <span class="nx-marquee-item"><i class="bi bi-bullseye"></i> Laser &amp; UV Rotational Drinkware</span>
+        <span class="nx-marquee-item"><i class="bi bi-shield-lock-fill"></i> Atomic SKU Stock Reservation</span>
+        <span class="nx-marquee-item"><i class="bi bi-wallet2"></i> Cash on Delivery &amp; GCash QR Verified</span>
+      </div>
+    </div>
   </div>
-  <div class="nx-marquee-track" aria-hidden="true">
-    <span class="nx-marquee-item"><i class="bi bi-layers-fill"></i> Full Dye-Sublimation</span>
-    <span class="nx-marquee-item"><i class="bi bi-droplet-half"></i> High-Density Screen &amp; DTF</span>
-    <span class="nx-marquee-item"><i class="bi bi-stars"></i> 3D Cap Embroidery</span>
-    <span class="nx-marquee-item"><i class="bi bi-bullseye"></i> Laser &amp; UV Rotational Drinkware</span>
-    <span class="nx-marquee-item"><i class="bi bi-shield-lock-fill"></i> Atomic SKU Stock Reservation</span>
-    <span class="nx-marquee-item"><i class="bi bi-wallet2"></i> Cash on Delivery &amp; GCash Verified</span>
-  </div>
+
+  <!-- 3. 3D Depth-Extruded Category Bento Grid -->
+  <section class="nx-section" id="categories" data-scroll-scene="categories">
+    <div class="container">
+      <div class="section-header reveal-3d">
+        <div>
+          <span class="eyebrow"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i> Six Specialized Lines</span>
+          <h2 class="nx-section-title mb-0">Engineered for Every Surface</h2>
+          <p class="section-sub">Tilt any product line in 3D space to inspect SKU prefixes and jump straight into live color &amp; size inventory.</p>
+        </div>
+        <a class="btn btn-soft" data-magnetic href="{% url 'store:product_list' %}">
+          Explore all {{ product_count }} blanks <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      <div class="row g-3 g-md-4">
+        {% for category in categories %}
+          <div class="col-md-6 col-lg-4 perspective-col">
+            <a class="spotlight-card reveal-stagger" data-tilt-3d data-tilt-max="9" style="--delay: {{ forloop.counter0 }}0ms;" href="{{ category.get_absolute_url }}">
+              <div class="card-3d-glare" aria-hidden="true"></div>
+              <div class="spotlight-visual">
+                {% if category.sample_image_url %}
+                  <img src="{{ category.sample_image_url }}" alt="{{ category.name }}">
+                {% else %}
+                  <img src="{% static category.placeholder %}" alt="{{ category.name }}">
+                {% endif %}
+                <span class="spotlight-code-pill card-z-badge">{{ category.code }} SERIES</span>
+              </div>
+              <div class="spotlight-body card-z-body">
+                <div>
+                  <h3 class="h5 fw-bold mb-2">{{ category.name }}</h3>
+                  <p class="text-muted small mb-0">{{ category.description }}</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                  <span class="small fw-bold" style="color: var(--brand-dark);">
+                    <i class="bi {{ category.icon }} me-1" aria-hidden="true"></i>{{ category.item_count }} active model{{ category.item_count|pluralize }}
+                  </span>
+                  <span class="spotlight-arrow card-z-arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+                </div>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 3D Cyber-Pipeline + Interactive Live Order Stage Simulator -->
+  <section class="nx-dark-band" id="how-it-works" data-scroll-scene="pipeline">
+    <div class="container position-relative">
+      <div class="section-header reveal-3d">
+        <div>
+          <span class="eyebrow"><i class="bi bi-diagram-3-fill" aria-hidden="true"></i> Zero-Friction 3D Workflow</span>
+          <h2 class="nx-section-title mb-0">From Digital Proof to Doorstep</h2>
+          <p class="section-sub text-secondary">Sign in, lock live blank stock, pay via GCash QR or owner number, and track every station in real time.</p>
+        </div>
+      </div>
+
+      <div class="pipeline-conduit-wrap">
+        <div class="pipeline-laser-rail d-none d-lg-block" aria-hidden="true">
+          <span class="pipeline-laser-pulse"></span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-3 perspective-col">
+            <div class="pipeline-card reveal-stagger" data-tilt-3d data-tilt-max="10" style="--delay: 0ms;">
+              <div class="card-3d-glare" aria-hidden="true"></div>
+              <div class="d-flex justify-content-between align-items-center mb-3 card-z-badge">
+                <span class="pipeline-num mb-0">STEP 01</span>
+                <span class="pipeline-3d-node"><i class="bi bi-person-lock" aria-hidden="true"></i></span>
+              </div>
+              <h3 class="h5 fw-bold card-z-body">Sign In &amp; Pick Your Blank</h3>
+              <p class="small text-secondary mb-0 card-z-body">Log in to your customer account, select exact color, size or capacity, quantity, and attach your print notes.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 perspective-col">
+            <div class="pipeline-card reveal-stagger" data-tilt-3d data-tilt-max="10" style="--delay: 80ms;">
+              <div class="card-3d-glare" aria-hidden="true"></div>
+              <div class="d-flex justify-content-between align-items-center mb-3 card-z-badge">
+                <span class="pipeline-num mb-0">STEP 02</span>
+                <span class="pipeline-3d-node"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i></span>
+              </div>
+              <h3 class="h5 fw-bold card-z-body">Confirm Delivery Address</h3>
+              <p class="small text-secondary mb-0 card-z-body">Enter your recipient name, mobile number, and delivery address, then verify your piece count and print specs.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 perspective-col">
+            <div class="pipeline-card reveal-stagger" data-tilt-3d data-tilt-max="10" style="--delay: 160ms;">
+              <div class="card-3d-glare" aria-hidden="true"></div>
+              <div class="d-flex justify-content-between align-items-center mb-3 card-z-badge">
+                <span class="pipeline-num mb-0">STEP 03</span>
+                <span class="pipeline-3d-node"><i class="bi bi-qr-code-scan" aria-hidden="true"></i></span>
+              </div>
+              <h3 class="h5 fw-bold card-z-body">Scan GCash QR or Send to Number</h3>
+              <p class="small text-secondary mb-0 card-z-body">Scan the shop's GCash QR code or enter the owner's GCash number in your GCash app, upload your receipt, or choose COD.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 perspective-col">
+            <div class="pipeline-card reveal-stagger" data-tilt-3d data-tilt-max="10" style="--delay: 240ms;">
+              <div class="card-3d-glare" aria-hidden="true"></div>
+              <div class="d-flex justify-content-between align-items-center mb-3 card-z-badge">
+                <span class="pipeline-num mb-0">STEP 04</span>
+                <span class="pipeline-3d-node"><i class="bi bi-activity" aria-hidden="true"></i></span>
+              </div>
+              <h3 class="h5 fw-bold card-z-body">Place Order &amp; Track Live</h3>
+              <p class="small text-secondary mb-0 card-z-body">Your SKU stock is reserved on confirmation. Follow every stage in My Orders from New Order to Completed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive 3D Order Tracker Preview -->
+      <div class="telemetry-demo reveal-stagger" data-tilt-3d data-tilt-max="4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="nx-live-dot" aria-hidden="true"></span>
+            <strong class="small text-uppercase" style="letter-spacing: 0.08em; color: #5eead4;">Interactive 3D Stage Telemetry Preview</strong>
+          </div>
+          <span class="small text-secondary">Click any station to inspect live portal updates</span>
+        </div>
+
+        <div class="stage-progress-track" aria-hidden="true">
+          <div class="stage-progress-fill" id="stage-progress-fill" style="width: 30%;"></div>
+        </div>
+
+        <div class="stage-pills" role="tablist" aria-label="Order stage preview">
+          <button type="button" class="stage-pill is-done" data-stage-idx="0">
+            <small>01</small>
+            <strong>New Order</strong>
+          </button>
+          <button type="button" class="stage-pill is-active" data-stage-idx="1">
+            <small>02</small>
+            <strong>On Process</strong>
+          </button>
+          <button type="button" class="stage-pill" data-stage-idx="2">
+            <small>03</small>
+            <strong>For Deliver</strong>
+          </button>
+          <button type="button" class="stage-pill" data-stage-idx="3">
+            <small>04</small>
+            <strong>Shipped</strong>
+          </button>
+          <button type="button" class="stage-pill" data-stage-idx="4">
+            <small>05</small>
+            <strong>Order Completed</strong>
+          </button>
+        </div>
+
+        <div class="mt-3 pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <span class="small text-light stage-desc-3d" id="stage-live-desc">Artwork proofed &amp; blanks pulled from warehouse bin for press setup.</span>
+          <a class="btn btn-teal btn-sm" data-magnetic href="{% url 'orders:list' %}">Open My Orders Portal →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Featured Drops with 3D Card Levitation -->
+  <section class="nx-section nx-featured-3d" data-scroll-scene="featured">
+    <div class="container">
+      <div class="section-header reveal-3d">
+        <div>
+          <span class="eyebrow"><i class="bi bi-fire" aria-hidden="true"></i> Studio Bestsellers</span>
+          <h2 class="nx-section-title mb-0">Featured Custom Merchandise</h2>
+          <p class="section-sub">High-demand blanks stocked across core team colors — ready for immediate customization.</p>
+        </div>
+        <a class="btn btn-teal" data-magnetic href="{% url 'store:product_list' %}">View All Products</a>
+      </div>
+      <div class="row g-3">
+        {% for product in featured %}
+          <div class="col-6 col-lg-3 perspective-col">{% include "partials/product_card.html" %}</div>
+        {% empty %}
+          <div class="col-12">{% include "partials/empty.html" with title="Catalog is being prepared" body="Run seed_demo to populate sample print products." %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Exploded 3D Isometric Print Architecture Bento Matrix -->
+  <section class="nx-section section-alt" data-scroll-scene="architecture">
+    <div class="container">
+      <div class="section-header reveal-3d">
+        <div>
+          <span class="eyebrow"><i class="bi bi-layers-half" aria-hidden="true"></i> 3D Production Architecture</span>
+          <h2 class="nx-section-title mb-0">Industrial Craft Meets Software Precision</h2>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-5 perspective-col">
+          <article class="bento-spec bento-spec-dark reveal-stagger" data-tilt-3d data-tilt-max="7">
+            <div class="card-3d-glare" aria-hidden="true"></div>
+            <div class="row g-3 align-items-center">
+              <div class="col-sm-7">
+                <div class="icon-blob mb-3" style="background: rgba(45,212,191,0.16); border-color: rgba(94,234,212,0.35); color: #5eead4;">
+                  <i class="bi bi-palette2" aria-hidden="true"></i>
+                </div>
+                <h3 class="h4 fw-bold">Surface-Matched Print Chemistry</h3>
+                <p class="small text-light opacity-75 mb-0">
+                  We never use one generic transfer for everything. Hover the 3D print stack to inspect how primer, ink, and thermal cure lock onto each garment.
+                </p>
+              </div>
+              <div class="col-sm-5">
+                <!-- Interactive Exploded 3D Isometric Print Layer Stack -->
+                <div class="iso-stack-scene" aria-hidden="true">
+                  <div class="iso-stack">
+                    <div class="iso-plate iso-plate-4"><span>04 · Thermal Cure</span></div>
+                    <div class="iso-plate iso-plate-3"><span>03 · CMYK + HD Ink</span></div>
+                    <div class="iso-plate iso-plate-2"><span>02 · Bond Primer</span></div>
+                    <div class="iso-plate iso-plate-1"><span>01 · Blank Weave</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="spec-tag-list">
+              <span class="spec-tag">Plastisol &amp; DTF</span>
+              <span class="spec-tag">Full Dye-Sublimation</span>
+              <span class="spec-tag">3D Puff Stitch</span>
+              <span class="spec-tag">Rotary UV / Laser</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-3 perspective-col">
+          <article class="bento-spec reveal-stagger" data-tilt-3d data-tilt-max="9" style="--delay: 80ms;">
+            <div class="card-3d-glare" aria-hidden="true"></div>
+            <div class="icon-blob mb-3 card-z-badge"><i class="bi bi-database-lock" aria-hidden="true"></i></div>
+            <h3 class="h5 fw-bold card-z-body">Zero Overselling</h3>
+            <p class="text-muted small mb-0 card-z-body">
+              Row-level database locking deducts your exact color &amp; size SKU on order placement and restores it automatically if cancelled.
+            </p>
+            <div class="spec-tag-list card-z-body">
+              <span class="spec-tag">Ledger Audited</span>
+              <span class="spec-tag">Real-Time SKU</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-4 perspective-col">
+          <article class="bento-spec reveal-stagger" data-tilt-3d data-tilt-max="9" style="--delay: 160ms;">
+            <div class="card-3d-glare" aria-hidden="true"></div>
+            <div class="icon-blob mb-3 card-z-badge"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
+            <h3 class="h5 fw-bold card-z-body">Built for Roster &amp; Event Scale</h3>
+            <p class="text-muted small mb-0 card-z-body">
+              Order a single personalized mug or outfit an entire corporate fun run. Customization notes stay bound to each order item from proof to dispatch.
+            </p>
+            <div class="spec-tag-list card-z-body">
+              <span class="spec-tag">3–5 Day Turnaround</span>
+              <span class="spec-tag">COD &amp; GCash QR</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Studio Dispatch & Inquiry Section -->
+  <section class="nx-section" id="contact" data-scroll-scene="contact">
+    <div class="container">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+          <span class="eyebrow"><i class="bi bi-broadcast" aria-hidden="true"></i> Direct Production Desk</span>
+          <h2 class="nx-section-title">Start a Custom Run with {{ site_settings.business_name }}</h2>
+          <p class="text-muted">Ordering for a company event, school fair, or esports league? Reach our studio directly or send specs below.</p>
+
+          <div class="panel p-4 mb-3 contact-card-3d" data-tilt-3d data-tilt-max="6">
+            <div class="card-3d-glare" aria-hidden="true"></div>
+            <div class="d-flex gap-3 align-items-start mb-3">
+              <div class="icon-blob"><i class="bi bi-telephone" aria-hidden="true"></i></div>
+              <div>
+                <div class="small text-muted fw-semibold">Phone / Viber Hotline</div>
+                <a class="fw-bold" href="tel:{{ site_settings.phone }}">{{ site_settings.phone }}</a>
+              </div>
+            </div>
+            <div class="d-flex gap-3 align-items-start mb-3">
+              <div class="icon-blob"><i class="bi bi-envelope" aria-hidden="true"></i></div>
+              <div>
+                <div class="small text-muted fw-semibold">Production Email</div>
+                <a class="fw-bold" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
+              </div>
+            </div>
+            <div class="d-flex gap-3 align-items-start">
+              <div class="icon-blob"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
+              <div>
+                <div class="small text-muted fw-semibold">Studio &amp; Pickup Hub</div>
+                <div class="fw-semibold">{{ site_settings.address }}</div>
+              </div>
+            </div>
+          </div>
+
+          {% if site_settings.map_embed_url %}
+            <iframe class="map-frame" title="Map showing {{ site_settings.business_name }}" src="{{ site_settings.map_embed_url }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          {% else %}
+            <div class="map-placeholder">
+              <div>
+                <i class="bi bi-pin-map fs-3 text-secondary" aria-hidden="true"></i>
+                <div class="fw-semibold text-dark mt-2">{{ site_settings.address }}</div>
+                <p class="small mb-0 mt-1">Mon–Sat · 9:00 AM – 6:00 PM · Walk-in pickup &amp; nationwide courier dispatch</p>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-lg-7">
+          <div class="panel p-4 p-lg-5 nx-dispatch-console">
+            <h3 class="h4 fw-bold mb-1">Send Project Brief</h3>
+            <p class="text-muted small mb-4">Share your blank type, quantity estimate, and target date. Inquiries route straight to our staff console.</p>
+            <form method="post" action="{% url 'home' %}#contact" novalidate>
+              {% csrf_token %}
+              {% include "partials/form_fields.html" with form=form %}
+              <button class="btn btn-glow-primary btn-lg" data-magnetic type="submit">
+                <i class="bi bi-send-fill" aria-hidden="true"></i> Transmit Inquiry
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
-
-<!-- 3. Cursor-Spotlight Bento Grid for the 6 Categories -->
-<section class="nx-section" id="categories">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i> Six Specialized Lines</span>
-        <h2 class="nx-section-title mb-0">Engineered for Every Surface</h2>
-        <p class="section-sub">Hover any product line to inspect SKU prefixes and jump straight into live color &amp; size inventory.</p>
-      </div>
-      <a class="btn btn-soft" href="{% url 'store:product_list' %}">
-        Explore all {{ product_count }} blanks <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-      </a>
-    </div>
-
-    <div class="row g-3 g-md-4">
-      {% for category in categories %}
-        <div class="col-md-6 col-lg-4">
-          <a class="spotlight-card reveal-stagger" style="--delay: {{ forloop.counter0 }}0ms;" href="{{ category.get_absolute_url }}">
-            <div class="spotlight-visual">
-              {% if category.sample_image_url %}
-                <img src="{{ category.sample_image_url }}" alt="{{ category.name }}">
-              {% else %}
-                <img src="{% static category.placeholder %}" alt="{{ category.name }}">
-              {% endif %}
-              <span class="spotlight-code-pill">{{ category.code }} SERIES</span>
-            </div>
-            <div class="spotlight-body">
-              <div>
-                <h3 class="h5 fw-bold mb-2">{{ category.name }}</h3>
-                <p class="text-muted small mb-0">{{ category.description }}</p>
-              </div>
-              <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                <span class="small fw-bold" style="color: var(--brand-dark);">
-                  <i class="bi {{ category.icon }} me-1" aria-hidden="true"></i>{{ category.item_count }} active model{{ category.item_count|pluralize }}
-                </span>
-                <span class="spotlight-arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
-              </div>
-            </div>
-          </a>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<!-- 4. Dark Cyber-Pipeline + Interactive Live Order Stage Simulator -->
-<section class="nx-dark-band" id="how-it-works">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow"><i class="bi bi-diagram-3-fill" aria-hidden="true"></i> Zero-Friction Workflow</span>
-        <h2 class="nx-section-title mb-0">From Digital Proof to Doorstep</h2>
-        <p class="section-sub text-secondary">No back-and-forth spreadsheets for standard runs — configure, lock stock, and monitor every station.</p>
-      </div>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-md-6 col-lg-3">
-        <div class="pipeline-card reveal-stagger" style="--delay: 0ms;">
-          <span class="pipeline-num">STEP 01</span>
-          <h3 class="h5 fw-bold">Sign In &amp; Pick Your Blank</h3>
-          <p class="small text-secondary mb-0">Log in to your customer account, select exact color, size or capacity, quantity, and attach your print notes.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="pipeline-card reveal-stagger" style="--delay: 80ms;">
-          <span class="pipeline-num">STEP 02</span>
-          <h3 class="h5 fw-bold">Confirm Delivery Address</h3>
-          <p class="small text-secondary mb-0">Enter your recipient name, mobile number, and delivery address, then verify your piece count and print specs.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="pipeline-card reveal-stagger" style="--delay: 160ms;">
-          <span class="pipeline-num">STEP 03</span>
-          <h3 class="h5 fw-bold">Scan GCash QR or Send to Number</h3>
-          <p class="small text-secondary mb-0">Scan the shop's GCash QR code or enter the owner's GCash number in your GCash app, upload your receipt, or choose COD.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="pipeline-card reveal-stagger" style="--delay: 240ms;">
-          <span class="pipeline-num">STEP 04</span>
-          <h3 class="h5 fw-bold">Place Order &amp; Track Live</h3>
-          <p class="small text-secondary mb-0">Your SKU stock is reserved on confirmation. Follow every stage in My Orders from New Order to Completed.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Interactive Order Tracker Preview -->
-    <div class="telemetry-demo reveal-stagger">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div class="d-flex align-items-center gap-2">
-          <span class="nx-live-dot" aria-hidden="true"></span>
-          <strong class="small text-uppercase" style="letter-spacing: 0.08em; color: #5eead4;">Interactive Customer Tracker Preview</strong>
-        </div>
-        <span class="small text-secondary">Click any stage to preview what customers see</span>
-      </div>
-
-      <div class="stage-pills" role="tablist" aria-label="Order stage preview">
-        <button type="button" class="stage-pill is-done" data-stage-idx="0">
-          <small>01</small>
-          <strong>New Order</strong>
-        </button>
-        <button type="button" class="stage-pill is-active" data-stage-idx="1">
-          <small>02</small>
-          <strong>On Process</strong>
-        </button>
-        <button type="button" class="stage-pill" data-stage-idx="2">
-          <small>03</small>
-          <strong>For Deliver</strong>
-        </button>
-        <button type="button" class="stage-pill" data-stage-idx="3">
-          <small>04</small>
-          <strong>Shipped</strong>
-        </button>
-        <button type="button" class="stage-pill" data-stage-idx="4">
-          <small>05</small>
-          <strong>Order Completed</strong>
-        </button>
-      </div>
-
-      <div class="mt-3 pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span class="small text-light" id="stage-live-desc">Artwork proofed &amp; blanks pulled from warehouse bin for press setup.</span>
-        <a class="btn btn-teal btn-sm" href="{% url 'orders:list' %}">Open My Orders Portal →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 5. Featured Drops -->
-<section class="nx-section">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow"><i class="bi bi-fire" aria-hidden="true"></i> Studio Bestsellers</span>
-        <h2 class="nx-section-title mb-0">Featured Custom Merchandise</h2>
-        <p class="section-sub">High-demand blanks stocked across core team colors — ready for immediate customization.</p>
-      </div>
-      <a class="btn btn-teal" href="{% url 'store:product_list' %}">View All Products</a>
-    </div>
-    <div class="row g-3">
-      {% for product in featured %}
-        <div class="col-6 col-lg-3">{% include "partials/product_card.html" %}</div>
-      {% empty %}
-        <div class="col-12">{% include "partials/empty.html" with title="Catalog is being prepared" body="Run seed_demo to populate sample print products." %}</div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<!-- 6. Print Architecture Bento Matrix -->
-<section class="nx-section section-alt">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow"><i class="bi bi-layers-half" aria-hidden="true"></i> Production Architecture</span>
-        <h2 class="nx-section-title mb-0">Industrial Craft Meets Software Precision</h2>
-      </div>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-lg-5">
-        <article class="bento-spec bento-spec-dark reveal-stagger">
-          <div class="icon-blob mb-3" style="background: rgba(45,212,191,0.16); border-color: rgba(94,234,212,0.35); color: #5eead4;">
-            <i class="bi bi-palette2" aria-hidden="true"></i>
-          </div>
-          <h3 class="h4 fw-bold">Surface-Matched Print Chemistry</h3>
-          <p class="small text-light opacity-75 mb-0">
-            We never use one generic transfer for everything. Each blank category is paired with the exact ink, thread, or laser process engineered to survive heavy wash cycles and outdoor wear.
-          </p>
-          <div class="spec-tag-list">
-            <span class="spec-tag">Plastisol &amp; DTF</span>
-            <span class="spec-tag">Full Dye-Sublimation</span>
-            <span class="spec-tag">3D Puff Stitch</span>
-            <span class="spec-tag">Rotary UV / Laser</span>
-          </div>
-        </article>
-      </div>
-
-      <div class="col-md-6 col-lg-3">
-        <article class="bento-spec reveal-stagger" style="--delay: 80ms;">
-          <div class="icon-blob mb-3"><i class="bi bi-database-lock" aria-hidden="true"></i></div>
-          <h3 class="h5 fw-bold">Zero Overselling</h3>
-          <p class="text-muted small mb-0">
-            Row-level database locking deducts your exact color &amp; size SKU on order placement and restores it automatically if cancelled.
-          </p>
-          <div class="spec-tag-list">
-            <span class="spec-tag">Ledger Audited</span>
-            <span class="spec-tag">Real-Time SKU</span>
-          </div>
-        </article>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <article class="bento-spec reveal-stagger" style="--delay: 160ms;">
-          <div class="icon-blob mb-3"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
-          <h3 class="h5 fw-bold">Built for Roster &amp; Event Scale</h3>
-          <p class="text-muted small mb-0">
-            Order a single personalized mug or outfit an entire corporate fun run. Customization notes stay bound to each order item from proof to dispatch.
-          </p>
-          <div class="spec-tag-list">
-            <span class="spec-tag">3–5 Day Turnaround</span>
-            <span class="spec-tag">COD &amp; GCash</span>
-          </div>
-        </article>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 7. Studio Dispatch & Inquiry Section -->
-<section class="nx-section" id="contact">
-  <div class="container">
-    <div class="row g-4 align-items-start">
-      <div class="col-lg-5">
-        <span class="eyebrow"><i class="bi bi-broadcast" aria-hidden="true"></i> Direct Production Desk</span>
-        <h2 class="nx-section-title">Start a Custom Run with {{ site_settings.business_name }}</h2>
-        <p class="text-muted">Ordering for a company event, school fair, or esports league? Reach our studio directly or send specs below.</p>
-
-        <div class="panel p-4 mb-3">
-          <div class="d-flex gap-3 align-items-start mb-3">
-            <div class="icon-blob"><i class="bi bi-telephone" aria-hidden="true"></i></div>
-            <div>
-              <div class="small text-muted fw-semibold">Phone / Viber Hotline</div>
-              <a class="fw-bold" href="tel:{{ site_settings.phone }}">{{ site_settings.phone }}</a>
-            </div>
-          </div>
-          <div class="d-flex gap-3 align-items-start mb-3">
-            <div class="icon-blob"><i class="bi bi-envelope" aria-hidden="true"></i></div>
-            <div>
-              <div class="small text-muted fw-semibold">Production Email</div>
-              <a class="fw-bold" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
-            </div>
-          </div>
-          <div class="d-flex gap-3 align-items-start">
-            <div class="icon-blob"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
-            <div>
-              <div class="small text-muted fw-semibold">Studio &amp; Pickup Hub</div>
-              <div class="fw-semibold">{{ site_settings.address }}</div>
-            </div>
-          </div>
-        </div>
-
-        {% if site_settings.map_embed_url %}
-          <iframe class="map-frame" title="Map showing {{ site_settings.business_name }}" src="{{ site_settings.map_embed_url }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        {% else %}
-          <div class="map-placeholder">
-            <div>
-              <i class="bi bi-pin-map fs-3 text-secondary" aria-hidden="true"></i>
-              <div class="fw-semibold text-dark mt-2">{{ site_settings.address }}</div>
-              <p class="small mb-0 mt-1">Mon–Sat · 9:00 AM – 6:00 PM · Walk-in pickup &amp; nationwide courier dispatch</p>
-            </div>
-          </div>
-        {% endif %}
-      </div>
-
-      <div class="col-lg-7">
-        <div class="panel p-4 p-lg-5">
-          <h3 class="h4 fw-bold mb-1">Send Project Brief</h3>
-          <p class="text-muted small mb-4">Share your blank type, quantity estimate, and target date. Inquiries route straight to our staff console.</p>
-          <form method="post" action="{% url 'home' %}#contact" novalidate>
-            {% csrf_token %}
-            {% include "partials/form_fields.html" with form=form %}
-            <button class="btn btn-glow-primary btn-lg" type="submit">
-              <i class="bi bi-send-fill" aria-hidden="true"></i> Transmit Inquiry
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'js/landing.js' %}?v=5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+  <script src="{% static 'js/landing.js' %}?v=10"></script>
 {% endblock %}

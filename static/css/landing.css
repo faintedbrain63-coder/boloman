@@ -29,15 +29,126 @@
 /* ==========================================================================
    1. Aurora Mesh & Cyber-Grid Hero
    ========================================================================== */
+.nx-webgl-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.nx-webgl-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.nx-spatial-root { position: relative; z-index: 1; }
+
 .nx-hero {
   position: relative;
-  background: var(--obsidian);
+  background:
+    radial-gradient(900px 480px at var(--mx) var(--my), rgba(20, 184, 166, 0.2), transparent 48%),
+    linear-gradient(165deg, #07111c 0%, #050811 58%, #0b1220 100%);
   color: #f8fafc;
   padding: 5rem 0 4.5rem;
   overflow: hidden;
   isolation: isolate;
   --mx: 50%;
   --my: 35%;
+}
+.nx-perspective-floor {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -8%;
+  height: 46%;
+  perspective: 700px;
+  pointer-events: none;
+  z-index: 0;
+}
+.nx-perspective-plane {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(45, 212, 191, 0.28) 1px, transparent 1px),
+    linear-gradient(to top, rgba(56, 189, 248, 0.22) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: rotateX(68deg);
+  transform-origin: center top;
+  mask-image: linear-gradient(to bottom, #000 10%, transparent 88%);
+  animation: floorDrift 18s linear infinite;
+}
+.nx-horizon-glow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #2dd4bf, #38bdf8, transparent);
+  box-shadow: 0 0 24px #2dd4bf;
+}
+@keyframes floorDrift {
+  from { background-position: 0 0; }
+  to { background-position: 0 64px; }
+}
+.nx-floating-prism {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+.nx-prism-a { top: 12%; left: 6%; animation: prismSpin 16s linear infinite; }
+.nx-prism-b { right: 8%; bottom: 18%; animation: prismSpin 22s linear infinite reverse; }
+.prism-cube {
+  width: 72px;
+  height: 72px;
+  position: relative;
+  transform-style: preserve-3d;
+}
+.prism-cube i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(94, 234, 212, 0.55);
+  background: rgba(45, 212, 191, 0.05);
+}
+.prism-cube i:nth-child(1) { transform: translateZ(36px); }
+.prism-cube i:nth-child(2) { transform: rotateY(180deg) translateZ(36px); }
+.prism-cube i:nth-child(3) { transform: rotateY(90deg) translateZ(36px); }
+.prism-cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(36px); }
+.prism-cube i:nth-child(5) { transform: rotateX(90deg) translateZ(36px); }
+.prism-cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(36px); }
+.prism-ring {
+  width: 110px;
+  height: 110px;
+  border: 1px solid rgba(251, 146, 60, 0.55);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.25), inset 0 0 18px rgba(56, 189, 248, 0.2);
+}
+@keyframes prismSpin {
+  to { transform: rotateX(360deg) rotateY(360deg); }
+}
+.hero-enter-3d {
+  animation: heroRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+@keyframes heroRise {
+  from { opacity: 0; transform: translate3d(0, 28px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.nx-mini-stat {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 0.35rem 0.15rem;
+  transform-style: preserve-3d;
+}
+.nx-stat-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.16), transparent 70%);
+  transform: translateX(-120%);
+  animation: sheen 4.8s ease-in-out infinite;
+}
+@keyframes sheen {
+  20%, 100% { transform: translateX(120%); }
 }
 
 /* Interactive cursor aura */
@@ -213,6 +324,97 @@
 .holo-stage-wrap {
   perspective: 1200px;
 }
+.holo-orbit-halo {
+  position: absolute;
+  inset: -28px;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+.halo-ring {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1px solid rgba(45, 212, 191, 0.28);
+}
+.halo-ring-1 { animation: haloSpin 14s linear infinite; }
+.halo-ring-2 {
+  inset: 0;
+  border-color: rgba(56, 189, 248, 0.22);
+  animation: haloSpin 20s linear infinite reverse;
+}
+@keyframes haloSpin { to { transform: rotateX(68deg) rotateZ(360deg); } }
+.holo-floor-shadow {
+  height: 28px;
+  margin: 0.4rem 12% 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(45, 212, 191, 0.35), transparent 70%);
+  filter: blur(8px);
+}
+.holo-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 30%), rgba(255, 255, 255, 0.16), transparent 42%);
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: screen;
+}
+.holo-mode-switch { display: flex; gap: 0.3rem; }
+.holo-mode-btn {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+}
+.holo-mode-btn.is-active {
+  color: #042f2e;
+  background: #5eead4;
+  border-color: #5eead4;
+}
+.holo-3d-turntable {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: grab;
+  background: radial-gradient(circle at 50% 42%, rgba(15, 23, 42, 0.2), #050811 72%);
+}
+.holo-3d-turntable.is-dragging { cursor: grabbing; }
+.holo-3d-turntable canvas { width: 100%; height: 100%; display: block; }
+.holo-drag-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.7rem;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ccfbf1;
+  background: rgba(5, 8, 17, 0.72);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  pointer-events: none;
+}
+.holo-3d-quick-pill {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.65rem;
+  z-index: 4;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(5, 8, 17, 0.78);
+  color: #5eead4;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.28rem 0.6rem;
+}
+.holo-viewport.is-mesh .holo-photo,
+.holo-viewport.is-mesh .holo-print-projection,
+.holo-viewport.is-mesh .holo-3d-quick-pill,
+.holo-viewport.is-mesh .holo-method-chip,
+.holo-viewport.is-mesh .holo-sku-chip { display: none; }
 .holo-studio {
   position: relative;
   border-radius: 24px;
@@ -429,6 +631,14 @@
 /* ==========================================================================
    3. Infinite Kinetic Capability Marquee
    ========================================================================== */
+.nx-marquee-3d-wrap {
+  perspective: 900px;
+  background: #090e1a;
+}
+.nx-marquee-3d-wrap .nx-marquee {
+  transform: rotateX(18deg) scale(1.04);
+  transform-origin: center center;
+}
 .nx-marquee {
   background: #090e1a;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
@@ -477,6 +687,110 @@
   letter-spacing: -0.03em;
 }
 
+.perspective-col { perspective: 1100px; }
+.card-3d-glare {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(280px circle at var(--gx, 50%) var(--gy, 20%), rgba(255, 255, 255, 0.28), transparent 46%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.2s ease;
+}
+[data-tilt-3d]:hover .card-3d-glare { opacity: 1; }
+.reveal-3d {
+  opacity: 0;
+  transform: translate3d(0, 36px, -40px) rotateX(8deg);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-3d.is-visible { opacity: 1; transform: none; }
+.pipeline-conduit-wrap { position: relative; }
+.pipeline-laser-rail {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 42px;
+  height: 2px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+.pipeline-laser-pulse {
+  position: absolute;
+  top: 0;
+  width: 28%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #2dd4bf, transparent);
+  animation: railPulse 2.8s linear infinite;
+}
+@keyframes railPulse {
+  from { left: -30%; }
+  to { left: 110%; }
+}
+.pipeline-3d-node {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #5eead4;
+  background: rgba(45, 212, 191, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.25);
+}
+.stage-progress-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  margin-bottom: 0.85rem;
+  overflow: hidden;
+}
+.stage-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #14b8a6, #38bdf8);
+  box-shadow: 0 0 12px #2dd4bf;
+  transition: width 0.35s ease;
+}
+.iso-stack-scene {
+  height: 210px;
+  perspective: 700px;
+  display: grid;
+  place-items: center;
+}
+.iso-stack {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  transform-style: preserve-3d;
+  transform: rotateX(58deg) rotateZ(-32deg);
+  transition: transform 0.45s ease;
+}
+.bento-spec:hover .iso-stack { transform: rotateX(62deg) rotateZ(-18deg) translateY(-8px); }
+.iso-plate {
+  position: absolute;
+  inset: 18px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #042f2e;
+  transform-style: preserve-3d;
+  animation: plateFloat 3.6s ease-in-out infinite;
+}
+.iso-plate span { transform: rotateZ(32deg); }
+.iso-plate-1 { background: #99f6e4; animation-delay: 0s; }
+.iso-plate-2 { background: #5eead4; transform: translateZ(18px); animation-delay: 0.2s; }
+.iso-plate-3 { background: #2dd4bf; transform: translateZ(36px); animation-delay: 0.4s; }
+.iso-plate-4 { background: #fb923c; color: #431407; transform: translateZ(54px); animation-delay: 0.6s; }
+@keyframes plateFloat {
+  50% { translate: 0 -6px 0; }
+}
+.nx-featured-3d .product-card,
+.contact-card-3d,
+.nx-dispatch-console {
+  transform-style: preserve-3d;
+}
 .spotlight-card {
   --spot-x: 50%;
   --spot-y: 50%;
@@ -712,9 +1026,14 @@
   .holo-tabs { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 991px) {
+  .nx-floating-prism, .halo-ring { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .nx-orb, .nx-live-dot, .nx-gradient-text, .holo-scanline, .nx-marquee-track {
+  .nx-orb, .nx-live-dot, .nx-gradient-text, .holo-scanline, .nx-marquee-track,
+  .nx-perspective-plane, .prism-cube, .halo-ring, .nx-stat-sheen,
+  .hero-enter-3d, .pipeline-laser-pulse, .iso-plate {
     animation: none !important;
   }
-  .reveal-stagger { opacity: 1; transform: none; }
+  .reveal-stagger, .reveal-3d, .hero-enter-3d { opacity: 1; transform: none; }
 }
